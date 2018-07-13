@@ -1,0 +1,10 @@
+(dp1
+S'type'
+p2
+S'ResNetV2_Classifier'
+p3
+sS'name'
+p4
+S'RNV2_0'
+p5
+s.

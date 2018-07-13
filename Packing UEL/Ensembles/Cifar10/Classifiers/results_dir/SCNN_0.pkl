@@ -1,0 +1,10 @@
+(dp1
+S'type'
+p2
+S'SimpleCNN_Classifier'
+p3
+sS'name'
+p4
+S'SCNN_0'
+p5
+s.
