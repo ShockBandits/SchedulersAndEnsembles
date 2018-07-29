@@ -184,8 +184,7 @@ class SimpleCNN_Classifier:
     def get_metrics(self):
         self.train_acc = self.get_acc(self.train_data,
                                       self.train_labels)
-        self.train_conf_matrix = self.get_conf_matrix(self.train_data,
-                                                      self.train_labels)
+        self.train_conf_matrix = self.get_conf_matrix()
         self.summary_dict['train_acc'] = self.train_acc
         self.summary_dict['train_conf_matrix'] = self.train_conf_matrix
         
@@ -193,8 +192,7 @@ class SimpleCNN_Classifier:
         if self.has_test_data:
             self.test_acc = self.get_acc(self.test_data,
                                          self.test_labels)
-            self.test_conf_matrix = self.get_conf_matrix(self.test_data,
-                                                         self.test_labels)
+            self.test_conf_matrix = self.get_conf_matrix()
             self.summary_dict['test_acc'] = self.test_acc
             self.summary_dict['test_conf_matrix'] = self.test_conf_matrix
         else:

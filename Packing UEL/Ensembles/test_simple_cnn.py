@@ -1,6 +1,6 @@
-from Cifar10_Ensemble.Cifar10_Classifiers.SimpleCNN import *
-scnn = SimpleCNN_Classifier("SCNN_0.cfg")
-scnn.get_train_data('data_batch_1')
+from Cifar10.Classifiers.SimpleCNN import *
+scnn = SimpleCNN_Classifier("SCNN_3.cfg")
+scnn.get_train_data('birds_cats_deers_dogs_1_23')
 scnn.get_test_data('test_batch')
 scnn.create()
 scnn.fit()
@@ -10,7 +10,7 @@ scnn.print_conf_matrix('train')
 scnn.print_conf_matrix('test')
 scnn.save()
 
-scnn1 = SimpleCNN_Classifier("SCNN_0.cfg")
+scnn1 = SimpleCNN_Classifier("SCNN_3.cfg")
 scnn1.read()
 scnn1.print_acc()
 scnn1.print_conf_matrix('train')

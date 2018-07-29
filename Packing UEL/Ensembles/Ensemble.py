@@ -7,7 +7,9 @@ import os
 import pandas as pd
 import sys
 from validate import Validator
-from .Cifar10.Accessor.readCifar10 import *
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'Cifar10', 'Accessor'))
+from readCifar10 import *
 # need to change the above
 
 
@@ -16,7 +18,8 @@ class Ensemble(object):
     def __init__(self, data_set, ens_num = 0):
         
         # load the config file
-        cfg_file = './Ensembles/'+data_set+'/cfg_dir/ensemble_'+str(ens_num)+'.cfg'
+        home_dir = os.path.dirname(__file__)
+        cfg_file = os.path.join(home_dir, data_set, 'cfg_dir','ensemble_'+str(ens_num)+'.cfg')
         
         try:
             config = ConfigObj(cfg_file, file_error = True)
@@ -30,9 +33,12 @@ class Ensemble(object):
         
         # the classifiers used in the ensemble
         clfr_dict = config['classifiers']
-        import_loc = 'Ensembles.'+data_set+'.Classifiers.'
+        import_loc = 'Ensembles.Cifar10.Classifiers.'
         for curr_clfr in clfr_dict:
-            c_module = importlib.import_module(import_loc+curr_clfr)
+            try:
+                c_module = importlib.import_module(import_loc + curr_clfr)
+            except:
+                c_module = importlib.import_module('Cifar10.Classifiers.' + curr_clfr)
             constructor = getattr(c_module, curr_clfr+'_Classifier', None)
             
             self.classifier_list.append(curr_clfr)
@@ -118,15 +124,15 @@ class Ensemble(object):
         print "\n"
     #-----------------------------------------------
 
-    def print_indiv_acc(self, classifier_type, classifier_num = 0):
+    def print_indiv_acc(self, classifier_type, classifier_name, classifier_num = 0):
         classifier = self.classifier_dict[classifier_type][classifier_num]
-        print "%s - Classifier %s:"%(classifier_type, classifier_num)
+        print "%s - Classifier %s (%s):" % (classifier_type, classifier_num, classifier_name)
         classifier.print_acc()
 
     def print_all_accs(self):
         for curr_clfr_type in self.classifier_dict:
             for ctr, clfr in enumerate(self.classifier_dict[curr_clfr_type]):
-                self.print_indiv_acc(curr_clfr_type, ctr)
+                self.print_indiv_acc(curr_clfr_type, clfr.name, ctr)
                 print 
             print 
         print 

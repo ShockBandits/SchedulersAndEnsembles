@@ -22,7 +22,7 @@ from Ensembles.Cifar10.Accessor.readCifar10 import *
 
 # In[3]:
 
-from spectralEM import spectralEM
+from spectralEMNew import spectralEM
 from conflictGraph import conflictGraph
 from fakeENS import fakeENS
 
@@ -92,10 +92,11 @@ def ConfError(C_real, num_data, p_true, num_classifier, C_est, ph_est_avg):
 # In[9]:
 
 
-def simulator(data_set = 'Cifar10',
+def simulator(data_set = 'Cifar10', ens_num = 3,
               num_class = 3, num_classifier = 5,  # Ensemble and Data
               load_ENS = False, fit_ENS = False, 
               load_params = True, save_params = False,# Ensemble
+              Maxiter= 25, num_init = 10,
               k_max_size = 3, # allowed subset 
               arr_rate = 0.8, thres = 0.75, V = 1, # arrival and departure thres
               updateON = True, truePrior = False, # priors
@@ -109,7 +110,7 @@ def simulator(data_set = 'Cifar10',
     #       ENS and Data
     #---------------------------------
     if load_ENS:
-        ENS=Ensemble(data_set)
+        ENS=Ensemble(data_set, ens_num = ens_num)
         try:
             # fit the ENS again
             if fit_ENS:
@@ -263,7 +264,7 @@ def simulator(data_set = 'Cifar10',
     
     #          Create the spectral estimator
     
-    S = spectralEM(num_classifier, num_class, maxiter = 250, num_init = 50)
+    S = spectralEM(num_classifier, num_class, maxiter = Maxiter, num_init = num_init, disp =False)
     
     #          Compute metrics for Spectral estimation
     
@@ -300,7 +301,7 @@ def simulator(data_set = 'Cifar10',
     updateSpectral = True # no spectral updates (only EM)
     # make the following two 0 to stop exploration
     explore_prob_const = 0.1 # probability with which exploration happens
-    init_explore = 200 # Number of initial time slots when explore happens
+    init_explore = 100 # Number of initial time slots when explore happens
     #---------------------------------------------------
     
     # Initialization
@@ -374,9 +375,9 @@ def simulator(data_set = 'Cifar10',
                 S.updateParamsSpectral()
                 count_update +=1
                 
-            #           update params using EM
-            
-            S.updateParamsEM(explore_data);
+                #   update params using EM
+
+                S.updateParamsEM(explore_data);
             
             #           update G params
             
@@ -511,13 +512,14 @@ def displayResults(output_dict):
 
 if __name__ =='__main__':
     # Compute the results 
-    output_dict = simulator(num_class = 3, num_classifier = 5,  # Ensemble and Data
-                  load_ENS = False, fit_ENS = False, 
-                  load_params = True, save_params = False, # Ensemble
+    output_dict = simulator(ens_num=3, num_class = 3, num_classifier = 5,  # Ensemble and Data
+                  load_ENS = True, fit_ENS = False,
+                  load_params = False, save_params = False, # Ensemble
                   k_max_size = 3, # allowed subset 
-                  arr_rate = 1.6, thres = 0.6, V = 0,# arrival and departure thres
+                  arr_rate = 1.6, thres = 0.6,# arrival and departure thres
                   updateON = False, truePrior = True, # priors
-                  time_slots = 200)# simulation length
+                  Maxiter= 30, num_init=100,
+                  time_slots = 1000)# simulation length
     # Display the results    
     displayResults(output_dict)
 

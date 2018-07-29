@@ -1,8 +1,8 @@
-from Cifar10_Ensemble.Cifar10_Classifiers.RandomForest import *
+from Cifar10.Classifiers.RandomForest import *
 
 rfc = RandomForest_Classifier("RFC_0.cfg")
 rfc.create()
-rfc.get_train_data('data_batch1')
+rfc.get_train_data('data_batch_1')
 rfc.get_test_data('test_batch')
 rfc.fit()
 rfc.get_metrics()

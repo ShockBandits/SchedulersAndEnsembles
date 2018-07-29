@@ -10,8 +10,8 @@ import cvxpy as cvx
 import traceback
 import itertools
 from matplotlib import pyplot as plt
-#from joblib import Parallel, delayed
-#import multiprocessing
+from joblib import Parallel, delayed
+import multiprocessing
 
 
 # In[2]:
@@ -145,7 +145,7 @@ class conflictGraph:
         self.thres = thres
         self.V = V
         #-------parallel
-        # self.num_cores = min(20,multiprocessing.cpu_count())
+        self.num_cores = min(20,multiprocessing.cpu_count())
         #-------------------
         self.disp = disp
         # high value of self.disp suppresses more print statement
@@ -409,7 +409,7 @@ class conflictGraph:
             j1 = [nodes.index(n) for n in dict_maxlS[maxlS][1]]; 
             B[i,j1] = 1; b[i] = dict_maxlS[maxlS][0]
         #-----------------------------------------
-        constraints = [B*x <= b, A*x <= 1, 0 <= x, x <= 1]
+        constraints = [B*x <= b, A*x <= np.ones((num_edges, 1)), 0 <= x, x <= 1]
         #-----------------------------------------
         # objective
         #-----------------------------------------

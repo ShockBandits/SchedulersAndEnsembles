@@ -25,7 +25,8 @@ class spectralEM:
     It needs to send each sample to all the classifiers in the explore phase.
     '''
     #--------------------------------------------
-    def __init__(self, num_classifiers, num_classes, maxiter = 50, num_init = 5, thres_const = 1e-3, disp = False):
+    def __init__(self, num_classifiers, num_classes, maxiter = 50,
+                 num_init = 5, thres_const = 1e-3, disp = True):
         self.num_classifier = num_classifiers
         self.num_class = num_classes
         # self.group: dict| key: group number, value: list of classifiers in the group

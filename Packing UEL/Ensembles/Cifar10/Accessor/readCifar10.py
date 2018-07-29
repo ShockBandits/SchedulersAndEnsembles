@@ -2,12 +2,10 @@ import cPickle
 import matplotlib.pyplot as plt
 import os
 
-default_path = '/Cifar10/batches-py'
-up = lambda x: os.path.dirname(x)
+default_path = '/media/innovationcommons/DataStorage/Cifar-10/cifar-10-batches-py'
 
 def getCifar10(file, reshape_data = False, path = default_path):
-    data_path = up(up(up(os.path.realpath(__file__))))+default_path
-    with open(os.path.join(data_path,file), 'rb') as f:
+    with open(os.path.join(default_path,file), 'rb') as f:
         cifar_dict = cPickle.load(f)
         if reshape_data:
             num_images = cifar_dict['data'].shape[0]
@@ -16,8 +14,7 @@ def getCifar10(file, reshape_data = False, path = default_path):
     return cifar_dict
 
 def getMetaDict(path = default_path):
-    data_path = up(up(up(os.path.realpath(__file__))))+default_path
-    with open(os.path.join(data_path,'batches.meta'), 'rb') as f:
+    with open(os.path.join(default_path,'batches.meta'), 'rb') as f:
         label_dict = cPickle.load(f)
     return label_dict
 
