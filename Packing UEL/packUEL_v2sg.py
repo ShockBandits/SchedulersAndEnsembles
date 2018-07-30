@@ -76,7 +76,7 @@ def simulator(data_set = 'Cifar10',
     #       ENS and Data
     #---------------------------------
     if load_ENS:
-        ENS=Ensemble(data_set, 1)
+        ENS=Ensemble(data_set)
 
         # fit the ENS again
         if fit_ENS:

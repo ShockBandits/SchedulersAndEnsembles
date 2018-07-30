@@ -92,7 +92,7 @@ def ConfError(C_real, num_data, p_true, num_classifier, C_est, ph_est_avg):
 # In[9]:
 
 
-def simulator(data_set = 'Cifar10', ens_num = 3,
+def simulator(data_set = 'Cifar10', ens_num = 0,
               num_class = 3, num_classifier = 5,  # Ensemble and Data
               load_ENS = False, fit_ENS = False, 
               load_params = True, save_params = False,# Ensemble
@@ -512,7 +512,7 @@ def displayResults(output_dict):
 
 if __name__ =='__main__':
     # Compute the results 
-    output_dict = simulator(ens_num=3, num_class = 3, num_classifier = 5,  # Ensemble and Data
+    output_dict = simulator(ens_num=0, num_class = 3, num_classifier = 5,  # Ensemble and Data
                   load_ENS = True, fit_ENS = False,
                   load_params = False, save_params = False, # Ensemble
                   k_max_size = 3, # allowed subset 
