@@ -106,6 +106,32 @@ class XGBoost_Classifier:
     def classify(self, sample):
         return  self.classifier.predict_proba(sample)[0]
 
+    def get_conf_matrix(self, data, true_labels):
+        
+        pred_labels = self.classifier.predict(data)
+        if len(true_labels) != len(pred_labels):
+            print "Error, the number of true labels != number of predicted labels"
+            return
+
+        conf_matrix = confusion_matrix(true_labels, pred_labels)
+        conf_matrix = conf_matrix/conf_matrix.astype(np.float).sum(axis=1)[:,np.newaxis]
+
+        '''
+        conf_matrix = np.zeros((len(set(true_labels)),
+                                len(set(true_labels))))
+        class_dist = np.zeros((len(set(true_labels))))
+        for ctr in range(len(true_labels)):
+            x = true_labels[ctr]
+            y = pred_labels[ctr]
+            conf_matrix[x,y] += 1
+            class_dist[x] += 1
+
+        for ctr in range(len(class_dist)):
+            conf_matrix[ctr,:] /= class_dist[ctr]
+        '''
+            
+        return conf_matrix
+    '''
     def get_conf_matrix(self):
         if not self.has_test_data:
             print "Error, No test data."
@@ -118,7 +144,8 @@ class XGBoost_Classifier:
         conf_matrix = conf_matrix/conf_matrix.astype(np.float).sum(axis=1)
             
         return conf_matrix
-
+    '''
+    
     def print_conf_matrix(self, trvate="train"):
         if trvate.lower() == "train":
             conf_matrix = self.train_conf_matrix

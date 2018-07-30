@@ -1,9 +1,9 @@
-from Cifar10_Ensemble.Cifar10_Classifiers.XGBoost import *
+from Cifar10.Classifiers.XGBoost import *
 
 xgbc = XGBoost_Classifier("XGBC_0.cfg")
 xgbc.create()
-xgbc.get_train_data()
-xgbc.get_test_data()
+xgbc.get_train_data('data_batch_1')
+xgbc.get_test_data('test_batch')
 xgbc.fit()
 xgbc.get_metrics()
 xgbc.print_acc()
