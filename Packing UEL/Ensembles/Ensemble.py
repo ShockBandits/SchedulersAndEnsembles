@@ -33,12 +33,9 @@ class Ensemble(object):
         
         # the classifiers used in the ensemble
         clfr_dict = config['classifiers']
-        import_loc = 'Ensembles.Cifar10.Classifiers.'
+        import_package = 'Cifar10.Classifiers.'
         for curr_clfr in clfr_dict:
-            try:
-                c_module = importlib.import_module(import_loc + curr_clfr)
-            except:
-                c_module = importlib.import_module('Cifar10.Classifiers.' + curr_clfr)
+            c_module = importlib.import_module(import_package + curr_clfr)
             constructor = getattr(c_module, curr_clfr+'_Classifier', None)
             
             self.classifier_list.append(curr_clfr)
