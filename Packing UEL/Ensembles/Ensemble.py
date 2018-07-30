@@ -173,7 +173,8 @@ class Ensemble(object):
             for curr_clfr_type in self.classifier_list:
                 for ctr, clfr in enumerate(self.classifier_dict[curr_clfr_type]):
                     print "Geting conf_matrix for %s-%s"%(str(curr_clfr_type), str(ctr))
-                    conf_matrices[count] = clfr.get_conf_matrix()
+                    conf_matrices[count] = clfr.get_conf_matrix(clfr.test_data,
+                                                                clfr.test_labels)
                     count +=1
             return conf_matrices
         else:
