@@ -46,12 +46,12 @@ class Ensemble(object):
             
             if isinstance(clfr_dict[curr_clfr], str):
                 self.classifier_dict[curr_clfr].append(constructor(clfr_dict[curr_clfr]))
-                print "Loaded Config Info For %s - %s"%(curr_clfr,
+                print "Instantiated %s - %s"%(curr_clfr,
                                                         clfr_dict[curr_clfr])
             elif isinstance(clfr_dict[curr_clfr], list):
                 for clfr_elem in clfr_dict[curr_clfr]:
                     self.classifier_dict[curr_clfr].append(constructor(clfr_elem))
-                    print "Loaded Config Info For %s - %s"%(curr_clfr,
+                    print "Instantiated %s - %s"%(curr_clfr,
                                                             clfr_elem)
             else:
                 print "\n\nCan't Read Config Info For %s -  %s\n\n"%(curr_clfr,

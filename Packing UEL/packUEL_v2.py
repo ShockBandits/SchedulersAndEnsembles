@@ -31,6 +31,8 @@ from fakeENS import fakeENS
 
 
 def kbits(n, k):
+    '''Generate power set for set n, limited
+       to sets of length k or less'''
     result = []
     for bits in itertools.combinations(range(n), k):
         s = np.zeros(n)
@@ -56,6 +58,7 @@ def str_mat(mat):
 
 
 def averageAcc(p_true, C):
+    '''Weight accuracy for each class by class frequency'''
     return np.sum(C[i,i]*p for i, p in enumerate(p_true))    
 
 
@@ -75,7 +78,13 @@ def computeError(output_stream, true_label_stream):
 
 
 def ConfError(C_real, num_data, p_true, num_classifier, C_est, ph_est_avg):
-    errp = np.linalg.norm(p_true - ph_est_avg, 1)
+    # C_real = Array of real confusion matrices
+    # num_data = number of data points in simulation
+    # p_true = gnd truth class frequency
+    # num_classifier = nuimber of classifiers
+    # C_est = Array of estimated confusion matrices
+    # ph_est_avg = Estiamtion of p_true
+    errp = np.linalg.norm(p_true - ph_est_avg, 1) #L1-Norm
     err = [np.linalg.norm(C_real[k]- C_est[k], 1) for k in range(num_classifier)]
     print '---------------------------'
     print '*****Param Update*****'
@@ -111,24 +120,27 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
     #---------------------------------
     if load_ENS:
         ENS=Ensemble(data_set, ens_num = ens_num)
+        ENS.get_train_data(); ENS.assign_members_train_data()
+        ENS.get_test_data(); ENS.assign_members_test_data()
+
         try:
             # fit the ENS again
             if fit_ENS:
-                ENS.get_train_data(); ENS.assign_members_train_data()
-                ENS.get_test_data(); ENS.assign_members_test_data()
+                #ENS.get_train_data(); ENS.assign_members_train_data()
+                #ENS.get_test_data(); ENS.assign_members_test_data()
                 ENS.create_classifiers(); ENS.fit_classifiers()
                 ENS.save_classifiers()
             ENS.load_classifiers()
         except:
             print 'Error in loading classifiers'
-            ENS.get_train_data(); ENS.assign_members_train_data()
-            ENS.get_test_data(); ENS.assign_members_test_data()
+            #ENS.get_train_data(); ENS.assign_members_train_data()
+            #ENS.get_test_data(); ENS.assign_members_test_data()
             ENS.create_classifiers(); ENS.fit_classifiers()
             ENS.save_classifiers()
             ENS.load_classifiers()
             
-        ENS.get_train_data(); ENS.assign_members_train_data()
-        ENS.get_test_data(); ENS.assign_members_test_data()
+        #ENS.get_train_data(); ENS.assign_members_train_data()
+        #ENS.get_test_data(); ENS.assign_members_test_data()
         
         # info about classifiers
         name_classifier = ENS.import_name_classifier()
@@ -164,6 +176,7 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
             trueConfMat = ENS.get_conf_matrix()
             p_true = ENS.get_p_true()
     else:
+        # Loading FakeENS and data
         if load_params:
             conf_mat = np.load('conf_mat.npy').item() 
             p_true = np.load('p_true.npy')
@@ -196,7 +209,9 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
         # feed samples to the ensemble
         ENS.newSamples(stream_true_labels) 
         # re-randomize the output label mapping
-        ENS.reshuffle() 
+        ENS.reshuffle()
+
+        
     #--------------------------------------------------------
     #.         Display Ensemble and Data
     #-------------------------------------------------------- 
@@ -218,18 +233,20 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
     #--------------------------------------------------------
     # init params for spectral estimator and the conflict graph
     params = {}
+    # Prior distribution - uniform probability - unip
     unip = np.ones(num_class)/float(num_class);
-    # the initial conf matries
-    expert_frac = 0.01
-    expertConfMat = {j: (expert_frac)*np.eye(num_class)+ 
-                     (1-expert_frac)*np.tile(unip, [num_class, 1])
-                     for j in range(num_classifier)}
+    
     if truePrior:
         # True prior
         params['Confmat'] = trueConfMat
         params['p_true'] = p_true
     else:
         # expert prior with uniform label porbabilities
+        # the prior of conf matrices - larger expert_frac => larger diagonal
+        expert_frac = 0.01
+        expertConfMat = {j: (expert_frac)*np.eye(num_class)+ 
+                         (1-expert_frac)*np.tile(unip, [num_class, 1])
+                          for j in range(num_classifier)}
         params['Confmat'] = expertConfMat
         params['p_true'] = unip
     #---------display: current parameter error--------------
@@ -241,6 +258,9 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
     print 'True Avg accuracy: %s'%str_arr(true_avg_acc)
     print 'Initial Avg accuracy: %s'%str_arr([averageAcc(p_true, params['Confmat'][i]) 
                                               for i in range(num_classifier)])
+
+
+
     
     #                Allowed subsets
     
