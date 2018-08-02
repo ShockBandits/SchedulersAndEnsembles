@@ -119,29 +119,27 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
     #       ENS and Data
     #---------------------------------
     if load_ENS:
+        # Create ensemble of classifiers along with meta-data
+        # both for ensemble and for specifying each classifier
         ENS=Ensemble(data_set, ens_num = ens_num)
         ENS.get_train_data(); ENS.assign_members_train_data()
         ENS.get_test_data(); ENS.assign_members_test_data()
 
+        # Instantiate ensemble's classifiers 
+        ENS.create_classifiers(); 
+
         try:
             # fit the ENS again
             if fit_ENS:
-                #ENS.get_train_data(); ENS.assign_members_train_data()
-                #ENS.get_test_data(); ENS.assign_members_test_data()
-                ENS.create_classifiers(); ENS.fit_classifiers()
+                ENS.fit_classifiers()
                 ENS.save_classifiers()
             ENS.load_classifiers()
         except:
             print 'Error in loading classifiers'
-            #ENS.get_train_data(); ENS.assign_members_train_data()
-            #ENS.get_test_data(); ENS.assign_members_test_data()
-            ENS.create_classifiers(); ENS.fit_classifiers()
+            ENS.fit_classifiers()
             ENS.save_classifiers()
             ENS.load_classifiers()
             
-        #ENS.get_train_data(); ENS.assign_members_train_data()
-        #ENS.get_test_data(); ENS.assign_members_test_data()
-        
         # info about classifiers
         name_classifier = ENS.import_name_classifier()
         num_classifier = ENS.import_num_classifier()
