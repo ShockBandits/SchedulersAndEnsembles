@@ -73,39 +73,53 @@ class SimpleCNN_Classifier:
                       metrics=['accuracy'])
         self.classifier = model
 
-    def read(self):
+    def read(self, suffix =''):
+
+        filename = self.name + '_' + suffix
 
         # Load classifier architecture
-        saved_file = os.path.join(results_path, self.name + '.json')
+        saved_file = os.path.join(results_path, filename + '.json')
         with open(saved_file, 'r') as json_file:
             loaded_model_json = json_file.read()
         self.classifier = model_from_json(loaded_model_json)
         
         # load weights
-        saved_file = os.path.join(results_path, self.name + '.h5')
+        saved_file = os.path.join(results_path, filename + '.h5')
         self.classifier.load_weights(saved_file)
         
-        saved_file = os.path.join(results_path, self.name + '.pkl')
+        saved_file = os.path.join(results_path, filename + '.pkl')
         self.summary_dict = pickle.load(open(saved_file, 'rb'))
         for curr_field in self.summary_dict:
             self.__dict__[curr_field] = self.summary_dict[curr_field]
         print "Read ", saved_file
  
-    def save(self):
+    def save(self, suffix =''):
+
+        filename = self.name + '_' + suffix
 
         # serialize classifier to JSON
         classifier_json = self.classifier.to_json()
-        outfile = os.path.join(results_path, self.name + '.json')
+        outfile = os.path.join(results_path, filename + '.json')
         with open(outfile, "w") as json_file:
             json_file.write(classifier_json)
             
         # serialize weights to HDF5
-        outfile = os.path.join(results_path, self.name + '.h5')
+        outfile = os.path.join(results_path, filename + '.h5')
         self.classifier.save_weights(outfile)
 
-        outfile = os.path.join(results_path, self.name + '.pkl')
+        # save summary info in pkl file
+        outfile = os.path.join(results_path, filename + '.pkl')
         pickle.dump(self.summary_dict,
                     open(outfile, 'wb'))
+
+        # make human readable results file
+        out_str = self.get_acc_str()
+        out_str += self.get_conf_matrix_str("train")
+        out_str += self.get_conf_matrix_str("test")
+        outfile = os.path.join(results_path, filename + '.txt')
+        with open(outfile,'w') as f:
+            f.write(out_str)
+        
         print "Saved to ",outfile
 
     def get_train_data(self, filename):
@@ -225,71 +239,53 @@ class SimpleCNN_Classifier:
         conf_matrix = confusion_matrix(true_labels, pred_labels)
         conf_matrix = conf_matrix/conf_matrix.astype(np.float).sum(axis=1)[:,np.newaxis]
 
-        '''
-        conf_matrix = np.zeros((len(set(true_labels)),
-                                len(set(true_labels))))
-        class_dist = np.zeros((len(set(true_labels))))
-        for ctr in range(len(true_labels)):
-            x = true_labels[ctr]
-            y = pred_labels[ctr]
-            conf_matrix[x,y] += 1
-            class_dist[x] += 1
-
-        for ctr in range(len(class_dist)):
-            conf_matrix[ctr,:] /= class_dist[ctr]
-        '''
-            
         return conf_matrix
-
-    '''
-    def get_conf_matrix(self):
-        if not self.has_test_data:
-            print "Error, No test data."
-            return
-        pred_labels = self.classifier.predict(self.test_data)
-        pred_labels = np.argmax(pred_labels, 1)
-        test_labels = np.argmax(self.test_labels, 1)
-        
-        if len(test_labels) != len(pred_labels):
-            print "Error, the number of true labels != number of predicted labels"
-            return
-        conf_matrix = confusion_matrix(test_labels, pred_labels)
-        conf_matrix = conf_matrix/conf_matrix.astype(np.float).sum(axis=1)
-            
-        return conf_matrix
-    '''
 
     def get_acc(self, data, true_labels):
         return self.classifier.evaluate(data, true_labels)
 
-    def print_conf_matrix(self, trvate="train"):
+    def get_conf_matrix_str(self, trvate="train"):
         if trvate.lower() == "train":
             conf_matrix = self.train_conf_matrix
-            out_label = "Confusion Matrix - Training Set"
+            out_str = "\nConfusion Matrix - Training Set"
         else:
             conf_matrix = self.test_conf_matrix
-            out_label = "Confusion Matrix - Testing Set"
+            out_str = "\nConfusion Matrix - Testing Set"
 
         if conf_matrix is not None:
             df = pd.DataFrame(conf_matrix, index=self.abbr_names,
                               columns = self.abbr_names)
             df = df.applymap("{0:.3f}".format)
-            print '\n',df,'\n'
+            out_str += '\n' + df.to_string() +'\n'
         else:
-            print "Unknown"
+            out_str +=  "Unknown"
+        return out_str
+
+    
+    def get_acc_str(self):
+        out_str = "\nTraining Acc: "
+        if self.train_acc:
+            out_str += str(self.train_acc[1])
+        else:
+            out_str += "Unknown"
+
+        out_str += "\nTesting Acc: "
+        if self.test_acc:
+            out_str += str(self.test_acc[1])
+        else:
+            out_str += "Unknown"
+        return out_str
+
+   
+
+    def print_conf_matrix(self, trvate="train"):
+        print_str = self.get_conf_matrix_str(trvate)
+        print print_str
 
     def print_acc(self):
-        print "Training Acc:", 
-        if self.train_acc:
-            print self.train_acc[1]
-        else:
-            print "Unknown"
+        print_str = self.get_acc_str()
+        print print_str
 
-        print "Testing Acc:", 
-        if self.test_acc:
-            print self.test_acc[1]
-        else:
-            print "Unknown"
 
         
 

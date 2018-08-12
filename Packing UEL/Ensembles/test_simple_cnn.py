@@ -1,6 +1,6 @@
 from Cifar10.Classifiers.SimpleCNN import *
 scnn = SimpleCNN_Classifier("SCNN_3.cfg")
-scnn.get_train_data('birds_cats_deers_dogs_1_23')
+scnn.get_train_data('data_batch_1')
 scnn.get_test_data('test_batch')
 scnn.create()
 scnn.fit()
