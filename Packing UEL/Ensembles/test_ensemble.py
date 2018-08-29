@@ -8,23 +8,50 @@ x.get_test_data()
 x.assign_members_test_data()
 z=x.get_conf_matrix()
 print z
+x.test_classifiers([0,1,2,3,4])
+xx = x.get_confidence_arrays([0,1,2,3,4])
+for k in xx:
+    print k
+    for kk in xx[k]:
+        print "    ",kk,":",xx[k][kk]
+    print
 
 '''
-/usr/bin/python2.7 "/home/innovationcommons/InnovCommon_Projects/Shakkotai/SoumyaRepo/Packing UEL/Ensembles/test_ensemble.py"
+innovationcommons@icvr1:~/InnovCommon_Projects/Shakkotai/SchedulersAndEnsembles/Packing UEL/Ensembles$ python test_ensemble.py
 /home/innovationcommons/.local/lib/python2.7/site-packages/h5py/__init__.py:36: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
   from ._conv import register_converters as _register_converters
 Using Theano backend.
 Using cuDNN version 7005 on context None
 Mapped name None to device cuda0: GeForce GTX 1080 (0000:01:00.0)
-Loaded Config Info For ResNetV1 - RNV1_5.cfg
-Loaded Config Info For ResNetV1 - RNV1_4.cfg
-Loaded Config Info For ResNetV2 - RNV2_1.cfg
+Instantiated ResNetV1 - RNV1_5.cfg
+Instantiated ResNetV1 - RNV1_4.cfg
+Attempting to read  SCNN_1.cfg
+Instantiated SimpleCNN - SCNN_1.cfg
+Attempting to read  SCNN_0.cfg
+Instantiated SimpleCNN - SCNN_0.cfg
+Attempting to read  SCNN_3.cfg
+Instantiated SimpleCNN - SCNN_3.cfg
 
 
 Loading Classifiers
-Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/SoumyaRepo/Packing UEL/Ensembles/Cifar10/Classifiers/results_dir/RNV1_5.pkl
-Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/SoumyaRepo/Packing UEL/Ensembles/Cifar10/Classifiers/results_dir/RNV1_4.pkl
-Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/SoumyaRepo/Packing UEL/Ensembles/Cifar10/Classifiers/results_dir/RNV2_1.pkl
+Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/SchedulersAndEnsembles/Packing UEL/Ensembles/Cifar10/Classifiers/results_dir/SCNN_1.pkl
+Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/SchedulersAndEnsembles/Packing UEL/Ensembles/Cifar10/Classifiers/results_dir/SCNN_0.pkl
+Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/SchedulersAndEnsembles/Packing UEL/Ensembles/Cifar10/Classifiers/results_dir/SCNN_3.pkl
+Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/SchedulersAndEnsembles/Packing UEL/Ensembles/Cifar10/Classifiers/results_dir/RNV1_5.pkl
+Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/SchedulersAndEnsembles/Packing UEL/Ensembles/Cifar10/Classifiers/results_dir/RNV1_4.pkl
+
+
+SimpleCNN - Classifier 0 (SCNN_1):
+Training Acc: 0.7831566647390383
+Testing Acc: 0.6997
+
+SimpleCNN - Classifier 1 (SCNN_0):
+Training Acc: 0.8101
+Testing Acc: 0.7334
+
+SimpleCNN - Classifier 2 (SCNN_3):
+Training Acc: 0.765335278740349
+Testing Acc: 0.7352
 
 
 ResNetV1 - Classifier 0 (RNV1_5):
@@ -36,19 +63,137 @@ Training Acc: 0.9586167394615597
 Testing Acc: 0.8171
 
 
-ResNetV2 - Classifier 0 (RNV2_1):
-Training Acc: 0.9465
-Testing Acc: 0.7905
-
-
 
 Getting Train Data
+Geting data for SimpleCNN
+Geting data for SimpleCNN
+Geting data for SimpleCNN
 Geting data for ResNetV1
 Geting data for ResNetV1
-Geting data for ResNetV2
 
+Getting Test Data
+Geting data for SimpleCNN
+Geting data for SimpleCNN
+Geting data for SimpleCNN
+Geting data for ResNetV1
+Geting data for ResNetV1
+
+Geting conf_matrix
+Geting conf_matrix for ResNetV1-0
+Geting conf_matrix for ResNetV1-1
+Geting conf_matrix for SimpleCNN-0
+Geting conf_matrix for SimpleCNN-1
+Geting conf_matrix for SimpleCNN-2
+{0: array([[0.7  , 0.013, 0.123, 0.042, 0.01 , 0.003, 0.012, 0.006, 0.08 ,
+        0.011],
+       [0.019, 0.891, 0.013, 0.009, 0.   , 0.003, 0.005, 0.001, 0.031,
+        0.028],
+       [0.013, 0.   , 0.871, 0.052, 0.021, 0.028, 0.005, 0.007, 0.003,
+        0.   ],
+       [0.01 , 0.002, 0.069, 0.815, 0.022, 0.05 , 0.019, 0.007, 0.004,
+        0.002],
+       [0.011, 0.   , 0.148, 0.097, 0.66 , 0.027, 0.021, 0.033, 0.003,
+        0.   ],
+       [0.005, 0.001, 0.07 , 0.292, 0.021, 0.58 , 0.005, 0.02 , 0.004,
+        0.002],
+       [0.003, 0.002, 0.125, 0.132, 0.021, 0.015, 0.697, 0.001, 0.003,
+        0.001],
+       [0.02 , 0.001, 0.059, 0.084, 0.061, 0.038, 0.   , 0.735, 0.002,
+        0.   ],
+       [0.04 , 0.017, 0.033, 0.03 , 0.003, 0.001, 0.001, 0.003, 0.865,
+        0.007],
+       [0.031, 0.109, 0.027, 0.041, 0.004, 0.003, 0.004, 0.011, 0.034,
+        0.736]]), 1: array([[0.84 , 0.015, 0.044, 0.025, 0.008, 0.005, 0.007, 0.008, 0.027,
+        0.021],
+       [0.016, 0.909, 0.001, 0.01 , 0.   , 0.001, 0.004, 0.002, 0.018,
+        0.039],
+       [0.04 , 0.   , 0.842, 0.037, 0.021, 0.026, 0.025, 0.006, 0.   ,
+        0.003],
+       [0.012, 0.002, 0.045, 0.776, 0.019, 0.08 , 0.032, 0.023, 0.003,
+        0.008],
+       [0.019, 0.   , 0.067, 0.06 , 0.749, 0.028, 0.024, 0.051, 0.001,
+        0.001],
+       [0.008, 0.001, 0.055, 0.192, 0.02 , 0.691, 0.005, 0.025, 0.001,
+        0.002],
+       [0.009, 0.001, 0.051, 0.073, 0.011, 0.011, 0.837, 0.003, 0.001,
+        0.003],
+       [0.014, 0.001, 0.029, 0.048, 0.036, 0.029, 0.003, 0.834, 0.001,
+        0.005],
+       [0.068, 0.011, 0.02 , 0.016, 0.002, 0.005, 0.007, 0.002, 0.851,
+        0.018],
+       [0.029, 0.074, 0.008, 0.012, 0.002, 0.001, 0.003, 0.005, 0.019,
+        0.847]]), 2: array([[0.521, 0.038, 0.126, 0.061, 0.012, 0.003, 0.008, 0.02 , 0.151,
+        0.06 ],
+       [0.007, 0.827, 0.013, 0.016, 0.   , 0.001, 0.006, 0.01 , 0.024,
+        0.096],
+       [0.021, 0.004, 0.737, 0.094, 0.033, 0.037, 0.035, 0.021, 0.007,
+        0.011],
+       [0.004, 0.008, 0.066, 0.749, 0.023, 0.08 , 0.032, 0.019, 0.011,
+        0.008],
+       [0.005, 0.002, 0.106, 0.143, 0.55 , 0.016, 0.04 , 0.123, 0.014,
+        0.001],
+       [0.003, 0.002, 0.073, 0.383, 0.026, 0.458, 0.011, 0.038, 0.002,
+        0.004],
+       [0.001, 0.001, 0.081, 0.142, 0.03 , 0.014, 0.724, 0.004, 0.001,
+        0.002],
+       [0.007, 0.002, 0.04 , 0.087, 0.037, 0.046, 0.002, 0.762, 0.005,
+        0.012],
+       [0.02 , 0.046, 0.021, 0.034, 0.002, 0.003, 0.004, 0.006, 0.833,
+        0.031],
+       [0.009, 0.066, 0.009, 0.035, 0.003, 0.   , 0.003, 0.013, 0.026,
+        0.836]]), 3: array([[0.755, 0.03 , 0.033, 0.015, 0.012, 0.003, 0.009, 0.012, 0.083,
+        0.048],
+       [0.022, 0.865, 0.001, 0.005, 0.003, 0.002, 0.004, 0.003, 0.02 ,
+        0.075],
+       [0.081, 0.011, 0.53 , 0.052, 0.096, 0.091, 0.07 , 0.038, 0.016,
+        0.015],
+       [0.019, 0.01 , 0.067, 0.458, 0.067, 0.203, 0.086, 0.042, 0.026,
+        0.022],
+       [0.025, 0.003, 0.044, 0.037, 0.677, 0.03 , 0.057, 0.108, 0.014,
+        0.005],
+       [0.011, 0.003, 0.03 , 0.111, 0.044, 0.695, 0.028, 0.057, 0.01 ,
+        0.011],
+       [0.007, 0.005, 0.031, 0.047, 0.042, 0.019, 0.834, 0.003, 0.006,
+        0.006],
+       [0.01 , 0.004, 0.024, 0.026, 0.047, 0.068, 0.008, 0.801, 0.005,
+        0.007],
+       [0.056, 0.03 , 0.006, 0.007, 0.003, 0.004, 0.002, 0.002, 0.863,
+        0.027],
+       [0.021, 0.071, 0.002, 0.007, 0.001, 0.001, 0.003, 0.008, 0.03 ,
+        0.856]]), 4: array([[0.675, 0.054, 0.063, 0.017, 0.024, 0.004, 0.003, 0.003, 0.083,
+        0.074],
+       [0.011, 0.875, 0.002, 0.003, 0.001, 0.001, 0.002, 0.   , 0.01 ,
+        0.095],
+       [0.06 , 0.01 , 0.656, 0.032, 0.066, 0.083, 0.043, 0.015, 0.014,
+        0.021],
+       [0.012, 0.018, 0.059, 0.54 , 0.053, 0.21 , 0.035, 0.019, 0.021,
+        0.033],
+       [0.01 , 0.012, 0.046, 0.043, 0.759, 0.033, 0.022, 0.055, 0.01 ,
+        0.01 ],
+       [0.009, 0.01 , 0.038, 0.083, 0.033, 0.77 , 0.003, 0.03 , 0.008,
+        0.016],
+       [0.01 , 0.021, 0.06 , 0.074, 0.048, 0.046, 0.703, 0.004, 0.009,
+        0.025],
+       [0.01 , 0.013, 0.042, 0.036, 0.065, 0.079, 0.002, 0.709, 0.002,
+        0.042],
+       [0.059, 0.061, 0.008, 0.009, 0.004, 0.005, 0.   , 0.002, 0.802,
+        0.05 ],
+       [0.011, 0.089, 0.004, 0.004, 0.003, 0.002, 0.001, 0.002, 0.021,
+        0.863]])}
 Current Image Number: 0
 Current Image Label: 6
+SCNN_1  - Most Probable Label: 3
+[1.9174942e-05 1.7034235e-06 5.7244539e-02 5.3273594e-01 6.4077610e-03
+ 1.5293151e-01 2.4615088e-01 4.4417102e-03 6.4129134e-05 2.7632975e-06] 
+
+SCNN_0  - Most Probable Label: 6
+[3.2454144e-04 3.6976239e-04 4.4504814e-02 1.6915840e-01 2.4599757e-02
+ 1.9840723e-01 5.4046285e-01 2.0318206e-02 1.8149990e-03 3.9413775e-05] 
+
+SCNN_3  - Most Probable Label: 6
+[0.0025534  0.00198681 0.08058408 0.24526428 0.03876992 0.15457046
+ 0.44926366 0.01602138 0.00834853 0.00263748] 
+
 RNV1_5  - Most Probable Label: 6
 [4.5813658e-10 1.2556368e-06 1.9041836e-04 8.4171938e-03 2.2707325e-06
  3.1834941e-03 9.8820168e-01 1.1468115e-06 2.4752121e-06 8.5192234e-08] 
@@ -57,14 +202,22 @@ RNV1_4  - Most Probable Label: 6
 [4.7483186e-09 1.0977631e-06 2.9439353e-03 2.8350323e-01 5.4441698e-06
  1.5711127e-02 6.9782406e-01 8.4383455e-06 2.3316411e-06 2.8655464e-07] 
 
-RNV2_1  - Most Probable Label: 6
-[1.0417554e-14 1.0838563e-09 2.4509524e-07 1.0012677e-06 7.2939891e-08
- 6.7514395e-07 9.9999785e-01 1.1112377e-07 6.2226205e-12 8.1643730e-13] 
-
 ---------------------------------------------------
 
 Current Image Number: 1
 Current Image Label: 9
+SCNN_1  - Most Probable Label: 9
+[6.0981230e-05 2.1002940e-03 6.8903501e-05 8.0759237e-06 1.7884969e-07
+ 1.6985155e-06 2.6454867e-07 2.1267912e-05 9.5721618e-05 9.9764258e-01] 
+
+SCNN_0  - Most Probable Label: 9
+[1.8618269e-03 1.4695741e-02 1.2149444e-04 5.3007107e-06 1.4320350e-06
+ 3.5165676e-06 3.1740785e-07 2.5206211e-04 2.7563743e-04 9.8278272e-01] 
+
+SCNN_3  - Most Probable Label: 9
+[8.1158387e-06 2.8954572e-03 2.1402470e-06 1.6382737e-07 2.5177482e-07
+ 1.9301481e-07 2.8098142e-09 3.1128209e-06 2.5368574e-06 9.9708790e-01] 
+
 RNV1_5  - Most Probable Label: 9
 [2.2055044e-04 6.2704799e-05 4.6108843e-07 4.1987562e-08 1.2922162e-10
  2.1104416e-12 6.4767476e-11 1.3770690e-10 3.5849520e-05 9.9968052e-01] 
@@ -73,14 +226,22 @@ RNV1_4  - Most Probable Label: 9
 [8.3851104e-09 6.1985602e-06 6.6776778e-08 1.1436804e-08 6.7058103e-15
  2.3320779e-10 3.0554167e-11 3.6762446e-09 1.4323102e-07 9.9999356e-01] 
 
-RNV2_1  - Most Probable Label: 9
-[7.0709688e-11 1.0777926e-07 3.8087554e-16 2.8568733e-16 7.6688580e-20
- 3.4065679e-20 5.6125859e-19 9.7224658e-14 3.1994305e-12 9.9999988e-01] 
-
 ---------------------------------------------------
 
 Current Image Number: 2
 Current Image Label: 9
+SCNN_1  - Most Probable Label: 9
+[0.04164022 0.04969743 0.0214137  0.05531212 0.00285981 0.0153353
+ 0.01089075 0.03620474 0.01594641 0.7506995 ] 
+
+SCNN_0  - Most Probable Label: 9
+[8.7701296e-03 3.9137553e-02 1.7450820e-03 1.0935921e-02 2.9501750e-04
+ 2.1598367e-03 9.0693712e-04 9.9563673e-03 5.2484833e-03 9.2084473e-01] 
+
+SCNN_3  - Most Probable Label: 9
+[3.4687765e-02 1.3156338e-01 3.3071015e-03 1.6652797e-03 2.4246932e-04
+ 3.2093108e-03 1.3241722e-04 2.9483340e-03 1.2364226e-02 8.0987966e-01] 
+
 RNV1_5  - Most Probable Label: 9
 [2.3508206e-02 5.9400667e-03 1.3086294e-02 4.2900224e-03 5.2805652e-04
  4.7459820e-05 2.7725141e-04 5.7794964e-03 5.3595523e-03 9.4118357e-01] 
@@ -89,14 +250,22 @@ RNV1_4  - Most Probable Label: 9
 [4.7237519e-03 2.3242849e-04 4.5385390e-05 2.9401099e-03 5.0281933e-06
  1.7249615e-05 6.1678111e-05 2.0995620e-04 5.6205234e-03 9.8614383e-01] 
 
-RNV2_1  - Most Probable Label: 9
-[2.0724286e-03 1.4094274e-04 2.3750777e-06 2.7734803e-05 7.5255485e-08
- 7.0178379e-07 6.6607492e-07 4.9232753e-08 4.5861819e-04 9.9729627e-01] 
-
 ---------------------------------------------------
 
 Current Image Number: 3
 Current Image Label: 4
+SCNN_1  - Most Probable Label: 4
+[8.7431308e-06 1.6716047e-05 1.2334890e-02 1.4471583e-03 9.3980402e-01
+ 3.9501581e-04 2.2434104e-02 2.3553276e-02 8.4490557e-07 5.1923944e-06] 
+
+SCNN_0  - Most Probable Label: 4
+[8.4462708e-06 6.6218390e-06 4.5059179e-03 4.7595764e-04 9.7112638e-01
+ 1.3475560e-03 8.2157794e-03 1.4307233e-02 8.7770422e-07 5.2293558e-06] 
+
+SCNN_3  - Most Probable Label: 4
+[1.6117444e-07 6.8790939e-07 1.0924955e-03 3.4193564e-04 9.8275244e-01
+ 3.8311598e-04 1.5227867e-02 2.0046043e-04 4.8743967e-08 6.7653815e-07] 
+
 RNV1_5  - Most Probable Label: 4
 [3.4780510e-09 6.1525851e-09 4.1886606e-06 7.3523125e-07 9.9963152e-01
  3.5821502e-06 1.8218603e-05 3.4171500e-04 2.2559747e-09 3.9340735e-09] 
@@ -106,14 +275,22 @@ RNV1_4  - Most Probable Label: 4
  9.99813497e-01 9.81923731e-05 1.23909524e-06 5.82424509e-05
  4.46486977e-13 4.32422265e-10] 
 
-RNV2_1  - Most Probable Label: 4
-[8.7109160e-11 3.2410723e-12 2.7883509e-09 5.2765947e-09 9.9983919e-01
- 2.2275874e-09 1.9353249e-05 1.4145448e-04 4.6143848e-14 1.4182132e-10] 
-
 ---------------------------------------------------
 
 Current Image Number: 4
 Current Image Label: 1
+SCNN_1  - Most Probable Label: 1
+[4.7448585e-03 9.6377611e-01 3.7983230e-06 6.1820464e-07 7.3253108e-07
+ 2.2239250e-08 4.1159218e-08 2.1422552e-06 6.0202093e-03 2.5451440e-02] 
+
+SCNN_0  - Most Probable Label: 1
+[1.2414381e-03 9.9633574e-01 4.2276930e-08 3.1807643e-09 1.8240598e-07
+ 5.4626867e-09 3.7375480e-09 3.7783448e-06 9.7878728e-05 2.3209583e-03] 
+
+SCNN_3  - Most Probable Label: 1
+[6.0554757e-03 9.4412893e-01 3.9260703e-06 5.6834222e-07 6.4633765e-05
+ 5.3402010e-07 4.0968470e-08 1.1252162e-05 3.7064511e-04 4.9363978e-02] 
+
 RNV1_5  - Most Probable Label: 1
 [1.0751014e-10 1.0000000e+00 1.1476553e-17 2.8091049e-18 8.4919933e-19
  1.5859594e-22 1.1303479e-20 2.7445959e-19 3.6111860e-12 4.0911868e-10] 
@@ -122,183 +299,71 @@ RNV1_4  - Most Probable Label: 1
 [6.0570033e-13 1.0000000e+00 7.8689201e-20 1.8276046e-19 2.8209388e-18
  2.1136218e-20 1.3353506e-19 9.1220558e-19 1.6317844e-14 2.4076745e-09] 
 
-RNV2_1  - Most Probable Label: 1
-[3.4592187e-08 9.9999988e-01 4.6785406e-18 5.2553447e-20 4.8010835e-19
- 2.4194064e-22 1.9105870e-24 2.0996096e-17 1.0153685e-14 6.2677437e-08] 
-
 ---------------------------------------------------
 
+0
+     SCNN_1 : [1.9174942e-05 1.7034235e-06 5.7244539e-02 5.3273594e-01 6.4077610e-03
+ 1.5293151e-01 2.4615088e-01 4.4417102e-03 6.4129134e-05 2.7632975e-06]
+     RNV1_5 : [4.5813658e-10 1.2556368e-06 1.9041836e-04 8.4171938e-03 2.2707325e-06
+ 3.1834941e-03 9.8820168e-01 1.1468115e-06 2.4752121e-06 8.5192234e-08]
+     SCNN_3 : [0.0025534  0.00198681 0.08058408 0.24526428 0.03876992 0.15457046
+ 0.44926366 0.01602138 0.00834853 0.00263748]
+     RNV1_4 : [4.7483186e-09 1.0977631e-06 2.9439353e-03 2.8350323e-01 5.4441698e-06
+ 1.5711127e-02 6.9782406e-01 8.4383455e-06 2.3316411e-06 2.8655464e-07]
+     SCNN_0 : [3.2454144e-04 3.6976239e-04 4.4504814e-02 1.6915840e-01 2.4599757e-02
+ 1.9840723e-01 5.4046285e-01 2.0318206e-02 1.8149990e-03 3.9413775e-05]
+     Oracle : [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]
 
-Process finished with exit code 0
-'''
+1
+     SCNN_1 : [6.0981230e-05 2.1002940e-03 6.8903501e-05 8.0759237e-06 1.7884969e-07
+ 1.6985155e-06 2.6454867e-07 2.1267912e-05 9.5721618e-05 9.9764258e-01]
+     RNV1_5 : [2.2055044e-04 6.2704799e-05 4.6108843e-07 4.1987562e-08 1.2922162e-10
+ 2.1104416e-12 6.4767476e-11 1.3770690e-10 3.5849520e-05 9.9968052e-01]
+     SCNN_3 : [8.1158387e-06 2.8954572e-03 2.1402470e-06 1.6382737e-07 2.5177482e-07
+ 1.9301481e-07 2.8098142e-09 3.1128209e-06 2.5368574e-06 9.9708790e-01]
+     RNV1_4 : [8.3851104e-09 6.1985602e-06 6.6776778e-08 1.1436804e-08 6.7058103e-15
+ 2.3320779e-10 3.0554167e-11 3.6762446e-09 1.4323102e-07 9.9999356e-01]
+     SCNN_0 : [1.8618269e-03 1.4695741e-02 1.2149444e-04 5.3007107e-06 1.4320350e-06
+ 3.5165676e-06 3.1740785e-07 2.5206211e-04 2.7563743e-04 9.8278272e-01]
+     Oracle : [0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
 
+2
+     SCNN_1 : [0.04164022 0.04969743 0.0214137  0.05531212 0.00285981 0.0153353
+ 0.01089075 0.03620474 0.01594641 0.7506995 ]
+     RNV1_5 : [2.3508206e-02 5.9400667e-03 1.3086294e-02 4.2900224e-03 5.2805652e-04
+ 4.7459820e-05 2.7725141e-04 5.7794964e-03 5.3595523e-03 9.4118357e-01]
+     SCNN_3 : [3.4687765e-02 1.3156338e-01 3.3071015e-03 1.6652797e-03 2.4246932e-04
+ 3.2093108e-03 1.3241722e-04 2.9483340e-03 1.2364226e-02 8.0987966e-01]
+     RNV1_4 : [4.7237519e-03 2.3242849e-04 4.5385390e-05 2.9401099e-03 5.0281933e-06
+ 1.7249615e-05 6.1678111e-05 2.0995620e-04 5.6205234e-03 9.8614383e-01]
+     SCNN_0 : [8.7701296e-03 3.9137553e-02 1.7450820e-03 1.0935921e-02 2.9501750e-04
+ 2.1598367e-03 9.0693712e-04 9.9563673e-03 5.2484833e-03 9.2084473e-01]
+     Oracle : [0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
 
-'''
-innovationcommons@icvr1:~/InnovCommon_Projects/Shakkotai$ python test_ensemble.py
-Loaded Config Info For RandomForest - RFC_0.cfg
-/home/innovationcommons/.local/lib/python2.7/site-packages/h5py/__init__.py:36: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
-  from ._conv import register_converters as _register_converters
-Using Theano backend.
-Using cuDNN version 7005 on context None
-Mapped name None to device cuda0: GeForce GTX 1080 (0000:01:00.0)
-Loaded Config Info For ResNetV1 - RNV1_0.cfg
-Loaded Config Info For ResNetV2 - RNV2_0.cfg
-Loaded Config Info For SimpleCNN - SCNN_0.cfg
-Loaded Config Info For XGBoost - XGBC_0.cfg
+3
+     SCNN_1 : [8.7431308e-06 1.6716047e-05 1.2334890e-02 1.4471583e-03 9.3980402e-01
+ 3.9501581e-04 2.2434104e-02 2.3553276e-02 8.4490557e-07 5.1923944e-06]
+     RNV1_5 : [3.4780510e-09 6.1525851e-09 4.1886606e-06 7.3523125e-07 9.9963152e-01
+ 3.5821502e-06 1.8218603e-05 3.4171500e-04 2.2559747e-09 3.9340735e-09]
+     SCNN_3 : [1.6117444e-07 6.8790939e-07 1.0924955e-03 3.4193564e-04 9.8275244e-01
+ 3.8311598e-04 1.5227867e-02 2.0046043e-04 4.8743967e-08 6.7653815e-07]
+     RNV1_4 : [1.39197725e-11 1.09691922e-10 4.69723638e-08 2.88082738e-05
+ 9.99813497e-01 9.81923731e-05 1.23909524e-06 5.82424509e-05
+ 4.46486977e-13 4.32422265e-10]
+     SCNN_0 : [8.4462708e-06 6.6218390e-06 4.5059179e-03 4.7595764e-04 9.7112638e-01
+ 1.3475560e-03 8.2157794e-03 1.4307233e-02 8.7770422e-07 5.2293558e-06]
+     Oracle : [0. 0. 0. 0. 1. 0. 0. 0. 0. 0.]
 
-
-Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/Cifar10_Ensemble/Cifar10_Classifiers/results_dir/SCNN_0.pkl
-Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/Cifar10_Ensemble/Cifar10_Classifiers/results_dir/RFC_0_test.pkl
-Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/Cifar10_Ensemble/Cifar10_Classifiers/results_dir/XGBC_0_test.pkl
-Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/Cifar10_Ensemble/Cifar10_Classifiers/results_dir/RNV1_0.pkl
-Read  /home/innovationcommons/InnovCommon_Projects/Shakkotai/Cifar10_Ensemble/Cifar10_Classifiers/results_dir/RNV2_0.pkl
-
-
-SimpleCNN - Classifier 0:
-Training Acc: 0.4682
-Testing Acc: 0.4602
-
-
-RandomForest - Classifier 0:
-Training Acc: 0.9998
-Testing Acc: 0.369
-
-
-XGBoost - Classifier 0:
-Training Acc: 0.4969
-Testing Acc: 0.3736
-
-
-ResNetV1 - Classifier 0:
-Training Acc: 0.536
-Testing Acc: 0.5255
-
-
-ResNetV2 - Classifier 0:
-Training Acc: 0.4412
-Testing Acc: 0.4226
-
-
-
-Geting data for SimpleCNN
-Geting data for RandomForest
-Geting data for XGBoost
-Geting data for ResNetV1
-Geting data for ResNetV2
-
-Current Image Number: 0
-Current Image Label: 6
-SCNN_0  - Most Probable Label: 6
-[0.00493265 0.00538471 0.07782137 0.18491341 0.09949565 0.16369614
- 0.35249028 0.10274386 0.00321356 0.00530834] 
-
-RFC_0_test  - Most Probable Label: 6
-[0.   0.   0.   0.12 0.08 0.04 0.72 0.04 0.   0.  ] 
-
-XGBC_0_test  - Most Probable Label: 6
-[0.04448942 0.08247637 0.0636211  0.11081897 0.11816238 0.13331872
- 0.2502704  0.09162482 0.05363873 0.05157913] 
-
-RNV1_0  - Most Probable Label: 6
-[0.00252543 0.00194927 0.04296453 0.24760166 0.10448487 0.16670951
- 0.34550485 0.08227319 0.00215056 0.00383614] 
-
-RNV2_0  - Most Probable Label: 6
-[0.00456388 0.00656152 0.06214632 0.13681659 0.18055741 0.08240572
- 0.3901778  0.13086216 0.00166044 0.00424819] 
-
----------------------------------------------------
-
-Current Image Number: 1
-Current Image Label: 9
-SCNN_0  - Most Probable Label: 1
-[0.02636685 0.43615866 0.01188423 0.01771963 0.0054983  0.01005018
- 0.00942942 0.01214286 0.09547377 0.37527615] 
-
-RFC_0_test  - Most Probable Label: 9
-[0.   0.04 0.   0.   0.   0.   0.   0.04 0.04 0.88] 
-
-XGBC_0_test  - Most Probable Label: 1
-[0.06757198 0.21858148 0.07379811 0.08989111 0.05528509 0.11281931
- 0.04694833 0.07636517 0.13158351 0.12715591] 
-
-RNV1_0  - Most Probable Label: 1
-[6.4012213e-03 6.1779320e-01 1.0802649e-03 1.1555954e-03 1.3745519e-04
- 8.9393946e-04 1.7492965e-04 1.4449517e-03 2.7169559e-02 3.4374893e-01] 
-
-RNV2_0  - Most Probable Label: 1
-[3.8466260e-02 6.2289596e-01 1.5269503e-03 2.9471584e-03 5.3817942e-04
- 1.3885682e-04 3.3574572e-04 2.0044297e-03 6.8711393e-02 2.6243508e-01] 
-
----------------------------------------------------
-
-Current Image Number: 2
-Current Image Label: 9
-SCNN_0  - Most Probable Label: 9
-[0.08069818 0.09506809 0.04614895 0.05866797 0.01920338 0.02834463
- 0.02181115 0.11550109 0.09595361 0.43860295] 
-
-RFC_0_test  - Most Probable Label: 9
-[0.   0.   0.   0.04 0.04 0.   0.   0.   0.   0.92] 
-
-XGBC_0_test  - Most Probable Label: 9
-[0.07239086 0.05411108 0.03022318 0.04112104 0.02919118 0.03293592
- 0.04870701 0.07056148 0.13800466 0.48275363] 
-
-RNV1_0  - Most Probable Label: 9
-[0.17860048 0.12075048 0.00373171 0.00363354 0.00157554 0.0006626
- 0.00396123 0.00307366 0.19401525 0.48999554] 
-
-RNV2_0  - Most Probable Label: 9
-[0.12597184 0.04510085 0.06534275 0.02387517 0.05191361 0.0044923
- 0.03046357 0.07226986 0.1619905  0.4185796 ] 
-
----------------------------------------------------
-
-Current Image Number: 3
-Current Image Label: 4
-SCNN_0  - Most Probable Label: 6
-[0.0066687  0.00869478 0.14326897 0.07690764 0.21070375 0.0368927
- 0.47997636 0.02119407 0.0086338  0.00705923] 
-
-RFC_0_test  - Most Probable Label: 4
-[0.08 0.04 0.08 0.   0.6  0.08 0.12 0.   0.   0.  ] 
-
-XGBC_0_test  - Most Probable Label: 6
-[0.04054898 0.10011289 0.07193682 0.10856446 0.13720421 0.09107311
- 0.29155833 0.06235288 0.0400004  0.05664795] 
-
-RNV1_0  - Most Probable Label: 6
-[0.00315002 0.00570574 0.05364001 0.07791331 0.28172147 0.04457775
- 0.44974637 0.07518174 0.00103092 0.00733263] 
-
-RNV2_0  - Most Probable Label: 6
-[0.00313707 0.00841996 0.06320436 0.10323811 0.19281484 0.04343559
- 0.51601815 0.06374874 0.00270516 0.00327795] 
-
----------------------------------------------------
-
-Current Image Number: 4
-Current Image Label: 1
-SCNN_0  - Most Probable Label: 1
-[0.07197342 0.4024629  0.005332   0.00190668 0.00357094 0.00084197
- 0.00214547 0.00336547 0.20668961 0.30171162] 
-
-RFC_0_test  - Most Probable Label: 1
-[0.04 0.76 0.04 0.   0.   0.   0.   0.04 0.04 0.08] 
-
-XGBC_0_test  - Most Probable Label: 1
-[0.09413977 0.25770804 0.06434504 0.05326787 0.0347997  0.04238922
- 0.04687475 0.05460759 0.12250916 0.22935888] 
-
-RNV1_0  - Most Probable Label: 1
-[4.2426577e-03 6.4905697e-01 1.6993195e-05 1.8726561e-05 1.3918575e-05
- 2.7321441e-06 1.2317999e-05 4.4538592e-05 6.5754694e-03 3.4001568e-01] 
-
-RNV2_0  - Most Probable Label: 9
-[4.23816517e-02 3.27405453e-01 9.06154921e-04 7.42156000e-04
- 7.13584304e-04 2.56930125e-05 2.62055750e-04 3.23782256e-03
- 1.15317926e-01 5.09007573e-01] 
-
----------------------------------------------------
+4
+     SCNN_1 : [4.7448585e-03 9.6377611e-01 3.7983230e-06 6.1820464e-07 7.3253108e-07
+ 2.2239250e-08 4.1159218e-08 2.1422552e-06 6.0202093e-03 2.5451440e-02]
+     RNV1_5 : [1.0751014e-10 1.0000000e+00 1.1476553e-17 2.8091049e-18 8.4919933e-19
+ 1.5859594e-22 1.1303479e-20 2.7445959e-19 3.6111860e-12 4.0911868e-10]
+     SCNN_3 : [6.0554757e-03 9.4412893e-01 3.9260703e-06 5.6834222e-07 6.4633765e-05
+ 5.3402010e-07 4.0968470e-08 1.1252162e-05 3.7064511e-04 4.9363978e-02]
+     RNV1_4 : [6.0570033e-13 1.0000000e+00 7.8689201e-20 1.8276046e-19 2.8209388e-18
+ 2.1136218e-20 1.3353506e-19 9.1220558e-19 1.6317844e-14 2.4076745e-09]
+     SCNN_0 : [1.2414381e-03 9.9633574e-01 4.2276930e-08 3.1807643e-09 1.8240598e-07
+ 5.4626867e-09 3.7375480e-09 3.7783448e-06 9.7878728e-05 2.3209583e-03]
+     Oracle : [0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
 '''

@@ -151,6 +151,27 @@ class Ensemble(object):
                     print clfr.name," - Most Probable Label:", np.argmax(labels)
                     print labels,'\n'
             print "---------------------------------------------------\n"
+
+    def get_confidence_arrays(self, sample_image_nums):
+
+        out_dict = dict()
+        num_classes = len(set(self.train_labels))
+        for curr_image_num in sample_image_nums:
+
+            curr_image_label = self.train_labels[curr_image_num]
+            out_dict[curr_image_num] = dict()
+            temp = np.zeros([num_classes])
+            temp[curr_image_label] = 1.0
+            out_dict[curr_image_num]['Oracle'] = temp
+            
+            for curr_clfr_type in self.classifier_dict:
+                for ctr, clfr in enumerate(self.classifier_dict[curr_clfr_type]):
+                    samp = clfr.get_sample(clfr.train_data,
+                                           curr_image_num)
+                    labels = clfr.classify(samp)
+                    out_dict[curr_image_num][clfr.name] = labels
+        return out_dict
+
     #--------------------------------------------------
     #    Methods to interface with the estimator
     #--------------------------------------------------
