@@ -113,8 +113,8 @@ def slow_test(self, sample_image_nums):
 # {'acc': 0.8168759755562583, 'wrong': 1795.0, 'right': 8007.0999999999985}
 
 
-
-# print rnd_subsets_test(x, range(len(x.test_labels)), 1)
+x.rnd_subsets_test(range(len(x.test_labels)), 1)
+#print rnd_subsets_test(x, range(len(x.test_labels)), 1)
 # {'acc': 0.7443, 'wrong': 2557.0, 'right': 7443.0, 'total_time_slots': 2000}
 
 #print rnd_subsets_test(x, range(len(x.test_labels)), 2)
