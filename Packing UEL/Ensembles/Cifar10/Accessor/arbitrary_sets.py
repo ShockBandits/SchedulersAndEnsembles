@@ -148,7 +148,11 @@ def shuffle_data_set(in_dict):
 
 
 '''
-chosen_classes = [0,4,7]
-y = get_chosen_classes(chosen_classes, ['data_batch_1'])
+default_path = '/media/innovationcommons/DataStorage/Cifar-10/cifar-10-batches-py/'
+chosen_classes = [0, 4, 7]
+y = get_chosen_classes(chosen_classes, ['data_batch_1', 'data_batch_2'])
 yy = combine_batches(y)
+perc_dict = {0: 0.25, 4: 0.50, 7: 0.25}
+y3 = set_class_distribution(yy, perc_dict, 'test')
+y4 = shuffle_data_set(y3)
 '''
