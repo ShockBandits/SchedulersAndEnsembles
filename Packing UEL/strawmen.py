@@ -13,9 +13,16 @@ class StrawMan1(object):
         self.queue = []
 
     def newArrival(self, new_image_list):
+        """Adds new images to processing queue"""
         self.queue += new_image_list
 
     def schedule(self):
+        """ Sends images to be classified. Each image is sent to a
+             number of classifiers equal to the subset_size, or
+             how ever many are available. The return list contains
+             for each image, an identifying number, the consensus
+             classification of the classifiers and a dictionary
+             listing the decisions of the individual classifiers"""
         if len(self.queue) == 0:
             return []
         num_scheduled_images = min(self.subset_size, len(self.queue))
@@ -28,7 +35,8 @@ class StrawMan1(object):
         done = False
         curr_image_ctr = 0
 
-        # Start processing images
+        # Start processing images - process until run out of images
+        # or classifiers
         while not done:
             eligible_classifiers = tot_num_classifiers
             random.shuffle(eligible_classifiers)

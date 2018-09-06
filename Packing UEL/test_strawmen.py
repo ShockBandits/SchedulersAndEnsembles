@@ -5,6 +5,7 @@ sys.path.append('/home/innovationcommons/InnovCommon_Projects/Shakkotai/Schedule
 from Ensembles.Ensemble import Ensemble
 from strawmen import StrawMan1
 
+# Create Ensemble
 x = Ensemble('./Cifar10/',  3)
 x.load_classifiers()
 x.get_train_data()
@@ -13,15 +14,18 @@ x.get_test_data()
 x.assign_members_train_data()
 x.assign_members_test_data()
 
+# Create strawman
 strawman = StrawMan1(x, 3)
 
 
 def test_it(max_new_arrivals):
-    sample_list = range(100)  # range(x.test_data.shape)
+    """ Tests strawman scheduler"""
+    sample_list = range(100)  # Limiting test to first 100 images
     random.shuffle(sample_list)
     done = False
 
     while not done:
+        # Calculate new arrivals to queue
         if len(sample_list) != 0:
             num_new_arrivals = random.randint(0, max_new_arrivals)
             num_new_arrivals = min(len(sample_list),
@@ -32,6 +36,7 @@ def test_it(max_new_arrivals):
         else:
             num_new_arrivals = 0
 
+        # Let strawman do single time step of processing
         results = strawman.schedule()
 
         print '\nAdded to Queue', num_new_arrivals
@@ -42,9 +47,13 @@ def test_it(max_new_arrivals):
         if len(sample_list) == 0 and len(strawman.queue) == 0:
             done = True
 
+# Test it
 test_it(5)
 
 '''
+Sample Result:
+
+
 Instantiated ResNetV1 - RNV1_5.cfg
 Instantiated ResNetV1 - RNV1_4.cfg
 Attempting to read  SCNN_1.cfg

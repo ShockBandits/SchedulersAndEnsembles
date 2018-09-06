@@ -9,6 +9,9 @@ default_path = '/media/innovationcommons/DataStorage/Cifar-10/cifar-10-batches-p
 
 
 def get_chosen_classes(chosen_list, source_batches):
+    """ Takes Cifar10 data batches, and removes all classes except
+        those on chosen_list. Returns a dict, whose first key is the
+        source batch and secondary keys point to the Cifar10 data"""
     
     chosen_dict = defaultdict(dict)
     for curr_batch in source_batches:
@@ -37,8 +40,11 @@ def get_chosen_classes(chosen_list, source_batches):
 
 
 def combine_batches(chosen_dict):
+    """ Combines data from get_chosen_classes by removing primary keys
+    (i.e. batch identifiers) from chosen dict and concatenating data
+    in secondary keys"""
 
-    batches = set(sorted(chosen_dict.keys())) - set(['meta_data'])
+    batches = set(sorted(chosen_dict.keys())) - {'meta_data'}
     batches = sorted(list(batches))
     root_dict = dict()
     root_dict['data'] = chosen_dict[batches[0]]['data']
@@ -80,6 +86,10 @@ def combine_batches(chosen_dict):
 
 
 def set_class_distribution(ub_dict, percentage_dict, name):
+    """ Takes data in ub_dict and rebalances it so that the class distribution
+        matches that given by percentage_dict. Each key,value pair in percentage
+        dict is class number, percentage of distribution. The name variable
+        gives the name of the file to which the data will be saved"""
     tot_percent = 0
     for x in percentage_dict:
         tot_percent += percentage_dict[x]
@@ -124,7 +134,9 @@ def set_class_distribution(ub_dict, percentage_dict, name):
 
     return bal_dict
 
+
 def shuffle_data_set(in_dict):
+    """ Randomizes image order in data set"""
     tot_rows = in_dict['data'].shape[0]
     new_order = range(tot_rows)
     for _ in range(5):
