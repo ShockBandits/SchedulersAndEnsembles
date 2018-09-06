@@ -292,7 +292,7 @@ class Ensemble(object):
 
             while len(eligible_classifiers) > 0:
 
-                # Get nest image
+                # Get next image
                 curr_image_num = sample_image_nums[curr_image_ctr]
                 print "Current Image Counter: %d" % curr_image_ctr
 
