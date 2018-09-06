@@ -1,4 +1,5 @@
-
+import cPickle
+import os
 from dataDisplay import Data_Display
 from arbitrary_sets import *
 from readCifar10 import getMetaDict
@@ -21,7 +22,7 @@ disp = Data_Display(data, labels, label_dict)
 disp.start_display()
 
 perc_dict = {0: 0.25, 4: 0.50, 7: 0.25}
-yyy = set_class_distribution(yy, perc_dict, 'test')
+yyy = set_class_distribution(yy, perc_dict, 'temp')
 
 data1 = yyy['data']
 labels1 = yyy['labels']
@@ -50,3 +51,6 @@ data2 = temp2.transpose([0, 2, 3, 1])
 
 disp = Data_Display(data2, labels2, label_dict)
 disp.start_display()
+cPickle.dump(yy2, open(os.path.join(default_path,
+                                    yy2['name']),
+                       'wb'))
