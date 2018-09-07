@@ -1,8 +1,10 @@
 import cPickle
 import matplotlib.pyplot as plt
 import os
-
-default_path = '/media/innovationcommons/DataStorage/Cifar-10/cifar-10-batches-py'
+import sys
+home_dir = os.path.expanduser('~')
+sys.path.append(os.path.join(home_dir, "cfg_SchedulerEnsembles"))
+from default_cifar_path import *
 
 def getCifar10(file, reshape_data = False, path = default_path):
     with open(os.path.join(default_path,file), 'rb') as f:
@@ -14,7 +16,7 @@ def getCifar10(file, reshape_data = False, path = default_path):
     return cifar_dict
 
 def getMetaDict(path = default_path):
-    with open(os.path.join(default_path,'batches.meta'), 'rb') as f:
+    with open(os.path.join(default_path, 'batches.meta'), 'rb') as f:
         label_dict = cPickle.load(f)
     return label_dict
 
