@@ -5,80 +5,51 @@
 
 
 import numpy as np
-from itertools import product
+from itertools import product, combinations
 import cvxpy as cvx
 import traceback
 import itertools
 from matplotlib import pyplot as plt
 from joblib import Parallel, delayed
 import multiprocessing
+from collections import deque
 
 
 # In[2]:
 
 
-class labelSubset:
+class labelQueue:
     '''
     Maintains the labelqueues where labels are obtained from the active subset, self.subset.
     Active subset is the binary encoding of the machines used for obtaining labels.
     Each labelqueue contains all the sample with a specific label.
     '''
 
-    def __init__(self, subset, estimator, confidence, disp = 100):
-        # subset:- binary encoding of the active machines
+    def __init__(self, label, disp = 100):
+        # label:- a specific label: label[i]= label from classifier i if > 0 else not labelled
         # queues:-  cache of labelqueues corresponding to the labels
-        self.subset = subset
-        self.queues = {} # Dict: key: label, value: [count, list of the element ids]
-        self.est = estimator
-        self.conf = confidence
+        self.label = label
+        self.queue = deque()
         self.disp = disp
 
     def printLS(self):
-        print 'subset:%s'%str(self.subset)
-        if len(self.queues.items()) > 0:
-            print 'Queues(label:count): %s'%",".join(k+':'+str(v[0])
-                                                      for k,v in self.queues.items())
+        print 'label:%s'%str(self.label)
+        print 'Queue length:%s'%str(len(self.queue))
 
-    def queueEntry(self, label, entry):
-        # label: (not a string) np array of labels
+    def queueEntry(self, entry):
         # entry: the sample id (begins from 1)
-        # increase queue length
+        # puts the new sample in the queue
 
-        # check for the label being in the active subset
-        chk1 = (np.dot(label, [not i for i in self.subset]) == 0)
-        # check if all lables are nonzero inside the active subset
-        chk2 = (np.dot((np.array(label) == 0), [i for i in self.subset]) == 0)
+        self.queue.append(entry)
 
-        if chk1 and chk2:
-            if str(label) in self.queues.keys():
-                # already present
-                self.queues[str(label)][0] += 1
-                self.queues[str(label)][1] += [entry]
-            else:
-                # new entry
-                self.queues[str(label)] = [1, [entry], label]
-        else:
-            print 'Invalid entry: subset:%s, label:%s, entry:%s'%(str(self.subset),
-                                                                  str(label), str(entry))
-            if not chk1:
-                print 'Error! Labels are marked outside active set'
-            if not chk2:
-                print 'Error! All labels are not marked in active set'
 
-    def queueExit(self, label):
-        # label is a string
+    def queueExit(self):
         # return a random element from the queue label
-        if label in self.queues.keys():
+        if len(self.queue)> 0:
             # select a random element from the list
             #exit = np.random.choice(self.queues[label][1]) # random choice
-            exit = self.queues[label][1][0] # oldest first
-            exit_label = self.queues[label][2]
-            self.queues[label][1].remove(exit)
-            self.queues[label][0] -= 1
-            # remove a queue if empty
-            if self.queues[label][0] == 0:
-                del self.queues[label]
-            return exit, exit_label
+            exit = self.queue.popleft()
+            return exit
         else:
             # list is empty
             if self.disp < 10:
@@ -88,38 +59,13 @@ class labelSubset:
                 print 'Queue:', self.queues
                 print 'Label:', label
                 print '-------------------'
-            return None, None
+            return None
 
     def totalCount(self):
         # returns total number of elements in the queue
-        return np.sum([v[0] for v in self.queues.values()])
+        return len(self.queue)
 
-    def queueMax(self):
-        # returns the max label and its queuelength
-        keys = self.queues.keys()
-        # O(#labelqueues) ops; can be expensive
-        # Need to maintain a maxheap for O(log(#labelqueues)) ops
-        if len(keys) > 0:
-            id_max = keys[np.argmax([self.queues[k][0] for k in keys])]
-            value_max = self.queues[id_max][0]
-            label_max = self.queues[id_max][2]
-            return label_max, value_max
-        else:
-            return None, 0
 
-    def queueWA(self, label_in):
-        # self.queues: keys: str(label), values: [count,[array of ids], label]
-        # given the label_in, sum_label P(label_in->label)*len(label)
-        return np.sum([self.est(label_in, self.queues[label][2])*self.queues[label][0]
-                       for label in self.queues.keys()])
-
-    def incntvWA(self,label_in):
-        # self.queues: keys: str(label), values: [count,[array of ids], label]
-        # given the label_in, sum_label P(label_in->label)*conf(label)
-        # conf(label) = (max_c P(true = c| label) - thres)*(label == terminal)
-        # confidence can be negative: (This deters entering all active state if possible)
-        return np.sum([self.est(label_in, self.queues[label][2])*self.conf(self.queues[label][2])
-                       for label in self.queues.keys()])
 
 
 # In[5]:
@@ -144,6 +90,8 @@ class conflictGraph:
         self.classifierEnsemble = Ens
         self.thres = thres
         self.V = V
+        self.trajectories = {}
+        self.classifierHist = {i:{} for i in range(M)}
         #-------parallel
         self.num_cores = min(20,multiprocessing.cpu_count())
         #-------------------
@@ -155,70 +103,66 @@ class conflictGraph:
         #  i\p. schedule is a list of sample id
         #  o\p. list of labels from the classifiers for the respective sample ids
         self.__createconflictGraph()
+        self.labelQueues = {}
         #-----display-----
         if self.disp <= 1:
-            print 'labelSubsetList:', self.labelSubsetList;
+            print 'labelQueueList:', self.labelQueueList;
             print 'Connex dict/ Nodes:', self.connexDict;
             print 'Conflict Edges/ Edges:', self.edges;
             print 'Neighbors:', self.neighbor;
         #------------------
-        # Create the label subsets
-        self.labelSubsets = {str(s): labelSubset(s, self.__estimator, self.__confidence)
-                             for s in self.labelSubsetList}
 
+    def __getlabelSubset(self, label):
+        return np.array(np.array(label)>0).astype(int)
 
+    def __listToStr(self, L):
+        s  = ''
+        for l in L:
+            s += str(int(l))
+        return s
+
+    def __strToList(self, s):
+        L  = []
+        for ch in s:
+            L.append(int(ch))
+        return L
+    #---------------------------
     def reset(self):
         # Delete the labelSubsets
-        for k in self.labelSubsets.keys():
-            del self.labelSubsets[k]
-        # ReCreate the label subsets
-        self.labelSubsets = {str(s): labelSubset(s, self.__estimator, self.__confidence)
-                             for s in self.labelSubsetList}
+        for k in self.labelQueues.keys():
+            del self.labelQueues[k]
 
     def totalCount(self):
-        return np.sum([lS.totalCount() for lS in self.labelSubsets.values()])
+        return np.sum([lS.totalCount() for lS in self.labelQueues.values()])
+
+    def totalQueues(self):
+        return len(self.labelQueues.keys())
 
 
-    def print_labelSubsets(self):
-        for lS in self.labelSubsets.values():
+    def print_labelQueues(self):
+        for lS in self.labelQueues.values():
             lS.printLS()
 
     def updateParams(self, new_params):
         self.params = new_params # update hidden params
 
     def __createconflictGraph(self):
-        labelSubsetList = [np.zeros(self.classifier_num).astype(int)]
-        connexDict = {str(s):[] for s in self.allowed_subset}
-        curr = 0
-        while curr < len(labelSubsetList):
-            label_curr = labelSubsetList[curr]
-            #------display-------
-            if self.disp <= 0: print 'label curr:', label_curr;
-            #-------------
-            for s in self.allowed_subset:
-                label_new = np.array(np.minimum(1, label_curr+s))
-                min_dist = np.min([np.linalg.norm(label_new - l)
-                                   for l in labelSubsetList])
-                pair_dist = np.linalg.norm(label_new - label_curr)
-                #------display-------
-                if self.disp <= 0:
-                    print 's:', s, ' min_dist:', min_dist, ' label_new:', label_new
-                #-------------
-                if pair_dist > 0: connexDict[str(s)]+= [(label_curr, label_new)];
-                if min_dist > 0: labelSubsetList += [label_new];
-            curr +=1
-        # list of labelSubsets
-        self.labelSubsetList = labelSubsetList
-        # list of connection dictionaries (nodes)
-        self.connexDict = connexDict # Also the nodes of the conflict graph
         # list of connection edges (edges)
         self.edges = []
-        self.neighbor = {str(s): [] for s in self.allowed_subset}
         for x, y in product(self.allowed_subset, repeat =2):
             if (np.sum(np.multiply(x,y))>0) and (np.linalg.norm(x-y)>0):
-                self.edges += [(str(x),str(y))]
-                self.neighbor[str(x)] += [str(y)]
-
+                self.edges += [(self.__listToStr(x), self.__listToStr(y))]
+        # the Adjacency matrix for the conflictGraph
+        allowedSS = [self.__listToStr(s) for s in self.allowed_subset]
+        num_allowedSS = len(allowedSS)
+        num_edges = len(self.edges) # edges:
+        A = np.zeros((num_edges, num_allowedSS))
+        for i, edge in enumerate(self.edges):
+            if edge[0] in allowedSS:
+                j1 = allowedSS.index(edge[0]); A[i,j1] = 1;
+            if edge[1] in allowedSS:
+                j2 = allowedSS.index(edge[1]); A[i,j2] = 1;
+        self.A = A
     #-------------------------------------------------------------
     ## The following are the inputs from the UEL module
     ## And some meaning less estimator
@@ -295,15 +239,17 @@ class conflictGraph:
             return best_val
 
 
-    def __checkTerminationBayes(self, label):
+    def __checkTerminationBayes(self, label, id):
         prob_c = [self.__classCondlabel(c, label) for c in range(self.num_classes)]
         best_c = np.argmax(prob_c)
         best_val = prob_c[best_c]
         # best confidence above thres or
         # samples from all classifiers
         if (best_val > self.thres) or (np.all(label>0)):
+            self.trajectories.setdefault(id, []).append((label, prob_c, best_c+1))
             return best_c+1, best_val
         else:
+            self.trajectories.setdefault(id, []).append((label, prob_c))
             return None, None
     #----------------------------------------------------------------------------
     def __innerCW(self, l):
@@ -319,28 +265,68 @@ class conflictGraph:
         else:
             return (-1000, None, None, None)
     #----------------------------------------------------------------------------
+
+
+
+
+
     def __compute_weights(self):
         # computes weights for each node in the conflict graph
         # each node has a list of (source, dest) pairs of labelSubsets
         # weight = max(source.queueMax() - dest.queueWA(label_in) , over all pairs)
         maxweightDict = {}
-        for k, L in self.connexDict.items(): # O(|S|)
-            # Subset k is one among the allowed subsets
-            # L is the labelSubset pairs connected by Subset k (# O(2^m))
-            #res_arr = Parallel(n_jobs = self.num_cores)(delayed(self.__innerCW)(l) for l in L)
-            res_arr = [self.__innerCW(l) for l in L]
-            #------choosing the max
-            max_ind = np.argmax([r[0] for r in res_arr])
-            max_res = res_arr[max_ind]
-            if (max_res[0])>0:
-                value_max = max_res[0]; incntv_max = max_res[1];
-                label_max = max_res[2]; l_max = max_res[3];
-                maxweightDict[k] = [value_max, l_max, str(label_max), incntv_max]
-            #else: for all l in L the source was empty
-            #   do nothing
+        for k in self.allowed_subset: # O(|S|)
+        # Subset k is one among the allowed subsets
+            for l in self.labelQueues.keys(): #O(|lQs|)
+            # l is one label queue
+                label_src = [int(i) for i in l]
+                subset_src = self.__getlabelSubset(label_src)
+                subset_new = np.array(np.minimum(1, subset_src+k))
+                subset_diff = [j for j in range(self.classifier_num) if (subset_new[j]>subset_src[j])]
+                #-------------
+                # create all the possible labels under the new subset
+                if len(subset_diff) > 0:
+                    list_labels = [[]]*self.classifier_num
+                    for lli in range(self.classifier_num):
+                        if lli in subset_src:
+                            list_labels[lli].append(label_src[lli])
+                        elif lli in subset_diff:
+                            list_labels[lli].extend(range(1, self.num_classes+1))
+                        else:
+                            list_labels[lli].append(0)
+
+                    dest_list =  [list(e) for e in product(*list_labels)]
+
+
+
+                    Q_l = self.labelQueues[l].totalCount()
+
+                    Q_d_list = []; p_d_list = []; acc_d_list = []
+                    for d in dest_list:
+                        if str(d) in self.labelQueues:
+                            Q_d_list.append(self.labelQueues[str(d)].totalCount())
+                            p_d_list.append(self.__estimator(label_src, label_dest))
+                            acc_d_list.append(self.__checkTerminationBayes(label_dest)[1])
+
+                    wght_l = Q_l - np.sum(q*p for q,p in zip(Q_d_list, p_d_list))
+                    # max new labels
+                    #inctv_l = (Q_l>0)*np.sum(k)/float(self.classifier_num)
+                    # max Accuracy
+                    inctv_l = (Q_l>0)*np.sum(acc*p for acc,p in zip(acc_d_list, p_d_list))
+
+                    maxweightDict[(l, self.__listToStr(k))] = wght_l + self.V*inctv_l
+
+                    #------------
+                    if self.disp <= 1:
+                        print 'dest_list', dest_list
+                    #------------
+                #else:
+                #    print 'l,k, subset_src, subset_new, subset_diff:\n', l, k, subset_src,
+                #    print subset_new, subset_diff
         #-------------------------
         #------display-------
-        if self.disp <=2: print 'maxweightDict:\n', maxweightDict;
+        if self.disp <= 2:
+            print 'maxweightDict:\n', maxweightDict;
         #--------------------
         return maxweightDict
 
@@ -359,7 +345,14 @@ class conflictGraph:
         #---------------------------------
         nodes = maxweightDict.keys()
         num_nodes = len(nodes)
-        num_edges = len(self.edges)
+
+        activeQs = self.labelQueues.keys()
+        num_activeQs = len(activeQs)
+
+        allowedSS = [self.__listToStr(s) for s in self.allowed_subset]
+        num_allowedSS = len(allowedSS)
+
+        num_edges = len(self.edges) # edges:
         #------display-------
         if self.disp <= 1:
             print '\nMaxweight:', maxweightDict
@@ -369,55 +362,47 @@ class conflictGraph:
                 print '!!!Error!!!'
                 print 'Nothing to schedule but Queue length:',self.totalCount()
                 print 'The current state:'
-                self.print_labelSubsets()
                 print
             return np.zeros(self.classifier_num), {}
         #---------------------------------
         ## Solving the Max Weighted Independent Set problem.
-        x = cvx.Variable((num_nodes,1), boolean = True) #MILP
+        x = cvx.Variable((num_nodes,1), boolean = True)
+        y = cvx.Variable((num_allowedSS,1), boolean = True)
         #-----------------------------------------
         # constraints
         #-----------------------------------------
-        # 1. Independent Set constraints
+        # 1. Independent Set constraints (This is static)
         #-----constraint matrix----
-        A = np.zeros((num_edges, num_nodes))
-        for i, edge in enumerate(self.edges):
-            if edge[0] in nodes:
-                j1 = nodes.index(edge[0]); A[i,j1] = 1;
-            if edge[1] in nodes:
-                j2 = nodes.index(edge[1]); A[i,j2] = 1;
+        A = self.A
         #-----------------------------------------
-        # 2. Non repetition of samples constraint
-        # dict_maxlS: key-label queue, value[0]- #entries in queue,
-        #           value[1]-list of nodes connected to label queue
-        dict_maxlS = {}
-        for node, val in maxweightDict.items():
-            maxlS = val[2]
-            w_maxlS = val[0]
-            try:
-                dict_maxlS[maxlS][1] += [node]
-            except:
-                dict_maxlS[maxlS] = [w_maxlS, [node]]
+        #2. At most one sample assigned to one subset
+        Y = np.zeros((num_allowedSS, num_nodes))
+        #print 'nodes:', [n[1] for n in nodes]
+        #print 'allowedSS:', allowedSS
 
-        num_maxlS = len(dict_maxlS.keys())
-        B = np.zeros((num_edges, num_nodes))
-        b = np.zeros((num_edges, 1))
+        for i, s in enumerate(allowedSS):
+            jp = [jpp for jpp, n in enumerate(nodes) if n[1] == s]
+            Y[i,jp] = 1
+        #-------------------------------------------
+        # 3. At most Q_l subsets assigned to labelqueue l
+        B = np.zeros((num_activeQs, num_nodes))
+        b = np.zeros((num_activeQs, 1))
 
-        list_maxlS = dict_maxlS.keys()
-
-        for i, maxlS in enumerate(list_maxlS):
-            j1 = [nodes.index(n) for n in dict_maxlS[maxlS][1]];
-            B[i,j1] = 1; b[i] = dict_maxlS[maxlS][0]
+        for i, activeQ in enumerate(activeQs):
+            jp = [jpp for jpp, n in enumerate(nodes) if n[0] == activeQ];
+            B[i,jp] = 1; b[i] = self.labelQueues[activeQ].totalCount()
         #-----------------------------------------
-        constraints = [B*x <= b, A*x <= np.ones((num_edges, 1)), 0 <= x, x <= 1]
+        #print '|Y|_1:', np.linalg.norm(Y,1)#, 'A:', A, 'B:', B, 'b:', b
+        if num_edges:
+            constraints = [A*y <= 1, 0<=y, y<=1, Y*x <= y, B*x <= b,  0<=x, x<=1]
+        else:
+            constraints = [0<=y, y<=1, Y*x <= y, B*x <= b,  0<=x, x<=1]
         #-----------------------------------------
         # objective
         #-----------------------------------------
-        bp = np.array([maxweightDict[n][0] for n in nodes])
-        incntv = np.array([maxweightDict[n][3] for n in nodes])
-        w = bp+self.V*incntv
+        w = np.array([maxweightDict[n] for n in nodes])
         if self.disp <= 1:
-            print 'weight data (n,bp, incntv, w):',[(n,bp[i], incntv[i], w[i])
+            print 'weight data (n,w):',[(n, w[i])
                                      for i,n in enumerate(nodes)]
         # Form objective
         obj = cvx.Maximize(w.T*x)
@@ -426,66 +411,82 @@ class conflictGraph:
         #-----------------------------------------
         prob = cvx.Problem(obj, constraints)
         prob.solve(solver = cvx.ECOS_BB)  # Returns the optimal value
+        #----------------------------------------
+        y_val = np.array(y.value)
+        x_val = np.array(x.value)
+        if self.disp <=1:
+            print("status:", prob.status)
+            print 'max y, min y:', np.max(y_val), np.min(y_val)
+            print 'max Ay, min Ay:', np.max(np.dot(A,y_val)), np.min(np.dot(A,y_val))
+            print 'max x, min x:', np.max(x_val), np.min(x_val)
+            print 'max Yx-y, min Yx - y:', np.max(np.dot(Y,x_val)- y_val), np.min(np.dot(Y,x_val) - y_val)
+            print 'max Bx-b, min Bx - b:', np.max(np.dot(B,x_val)- b), np.min(np.dot(B,x_val) - b)
         #-----------------------------------------
         try:
-            node_active = [nodes[i] for i, t in enumerate(x.value) if t > 0.5]
+            node_active = [nodes[i] for i, t in enumerate(x_val) if t > 0.5]
+            #print node_active
             if (self.totalCount() > 0) and (len(node_active) == 0):
+                node_id = np.argmax(w)
+                del node_active
+                node_active = [nodes[node_id]]
+                #if self.disp <=1:
                 print '!!!Error!!!'
                 print 'Nothing to schedule but Queue length:',self.totalCount()
                 print("status:", prob.status)
-                print('Maxweight:keys: each node, values: [value_max, l_max, label_max, incntv_max]')
+                print("optimal var", x_val)
+                print('Maxweight:[(label,subset):weight]')
                 print maxweightDict
-                print ("dict_maxlS: key:labelqueue, value:[# labelqueue, list connected nodes]")
-                print dict_maxlS
-                print 'The current state:'
-                self.print_labelSubsets()
+                print('Queues')
+                print [(k,v.queue) for k, v in self.labelQueues.items()]
                 print
+                print '** New node_active:', node_active
         except Exception as e:
             #------------
             print '!!!Error!!!!!'
             print e
             print("status:", prob.status)
             print("optimal value", prob.value)
-            print("optimal var", x.value)
-            print('Maxweight:keys: each node, values: [value_max, l_max, label_max, incntv_max]')
+            print("optimal var", x_val)
+            print('Maxweight [(label, subset): weight]')
             print maxweightDict
-            print ("dict_maxlS: key:labelqueue, value:[# labelqueue, list connected nodes]")
-            print dict_maxlS
+            print('Queues')
+            print self.labelQueues
             print
             #------------
-            return np.zeros(self.classifier_num), {}
+            return np.zeros(self.classifier_num), []
         #------display------------------------------
         if self.disp <= 1:
             print("status:", prob.status)
             print("optimal value", prob.value)
-            print("optimal var", x.value)
+            print("optimal var", x_val)
         #--------------------------------------------
         # With the MWIS problem solved we need to form the schedule
         schedule = np.zeros(self.classifier_num)
-        samplesOnTheFly = {}
+        samplesOnTheFly = []
+        #print "node_active:",node_active
         for node in node_active:
             schedule_old = np.copy(schedule)
 
-            source_lS = maxweightDict[node][1][0] # lS = labelSubset
-            dest_lS = maxweightDict[node][1][1]
-            lMax = maxweightDict[node][2] #lMax = labelMax
+            node_s = self.__strToList(node[1]) # subset of Classifiers
+            node_l = self.__strToList(node[0]) # the label matched with the classifier
 
             # Get the sample Id from: lMax and source_lS
-            sample_id, sample_label = self.labelSubsets[str(source_lS)].queueExit(lMax)
-
+            sample_id = self.labelQueues[node[0]].queueExit()
+            # remove the empty queues
+            if self.labelQueues[node[0]].totalCount() == 0:
+                del self.labelQueues[node[0]]
+            # put the new sample in the samplesinTheFLy directory
             if sample_id is not None:
-                # lMax = str(sample_label), sample_lable is np array
-                samplesOnTheFly[sample_id] = (sample_label, dest_lS)
-                # New Classifiers: The node
-                new_classifiers = (dest_lS - source_lS)
-                # Add the new_classifier schedule
-                schedule += new_classifiers*sample_id
-            # else: Skip
+                samplesOnTheFly.append((sample_id, node_l)) # sample id, node_l= old_label
+                #print 'id:', sample_id, 'subset:', node_s
+                schedule += np.array(node_s)*int(sample_id)
+                for i in range(self.classifier_num):
+                    if node_s[i]:
+                        self.classifierHist[i].setdefault(self.__listToStr(node_l), []).append(sample_id)
 
             #------display-------
-            if self.disp <= 1:
-                print('node:',node, 'source:', source_lS, 'dest:',
-                       dest_lS, 'label:', lMax, 'sample_id:',sample_id)
+            if self.disp <= -1:
+                print('node:',node)
                 print 'schedule old:', schedule_old, 'schedule new:', schedule
             #---------------------
             # Why 'sample_id == None' occurs?
@@ -493,7 +494,7 @@ class conflictGraph:
             # In such situations, scheduling one node may make a non-empty queue empty
 
         #------display-------
-        if self.disp <= 1:
+        if self.disp <= -1:
             print 'MWIS:', node_active
             print 'sch:',schedule
             print 'samples:',samplesOnTheFly
@@ -502,32 +503,23 @@ class conflictGraph:
 
     def __explore_schedule(self):
         # pick a sample from label Subset label_0 if exists
-            curr = 0; samplesOnTheFly  = {};
-            schedule = np.zeros(self.classifier_num);
-
-            dest_lS = np.ones(self.classifier_num);
-            new_classifiers = np.ones(self.classifier_num);
+            samplesOnTheFly  = [];
+            label_0 = np.zeros(self.classifier_num).astype(int)
+            id_0 = self.__listToStr(label_0)
             #----------
-            for source_lS in self.labelSubsetList:
-                # find the label
-                label_in, _ = self.labelSubsets[str(source_lS)].queueMax()
-                # find the sample
-                sample_id, _ = self.labelSubsets[str(source_lS)].queueExit(str(label_in))
-                #print 'explore schedule:', source_lS, label_in, sample_id, sample_label
-                #------------
-                if sample_id is not None:
-                    # lMax = str(sample_label), sample_label is np array
-                    samplesOnTheFly[sample_id] = (np.zeros(self.classifier_num), dest_lS)
-                    # here we reset existing label as we send it to all classifiers
-                    schedule = new_classifiers*sample_id
-                    break
+            # Get the sample Id from: lMax and source_lS
+            sample_id = self.labelQueues[id_0].queueExit()
+            # remove the empty queues
+            if self.labelQueues[id_0].totalCount() == 0:
+                del self.labelQueues[id_0]
+            # put the new sample in the samplesinTheFLy directory
+            if sample_id is not None:
+                schedule = np.ones(self.classifier_num).astype(int)*int(sample_id)
+                samplesOnTheFly.append((sample_id, label_0)) # sample id, node_l= old_label
+            else:
+                schedule = np.zeros(self.classifier_num).astype(int)
             #-------------
             return schedule, samplesOnTheFly
-
-
-
-
-
 
     def schedule(self, explore = False):
         # schedules the samples to classifiers
@@ -543,7 +535,8 @@ class conflictGraph:
         # l_max = corresponding pair of labelSubsets, l_max[0]: source, l_max[1]: dest
         # label_max = corresponding label in l_max[0] (source labelsubset)
         #------------------------------
-        if explore:
+        id0 = self.__listToStr(np.zeros(self.classifier_num).astype(int))
+        if explore and (id0 in self.labelQueues):
             schedule, samplesOnTheFly = self.__explore_schedule()
         else:
             schedule, samplesOnTheFly = self.__compute_schedule(maxweightDict)
@@ -557,34 +550,52 @@ class conflictGraph:
         # Update the queues now
         # sample_id >= 1 (0 is reserved for no entry to the classifier)
         sample_out = []
-        for sample_id, value in samplesOnTheFly.items():
-            old_label, dest_lS = value
-            fresh_labels = np.multiply(new_labels, np.array(schedule) == sample_id)
+        #print 'schedule:', schedule, 'samplesOnTheFly:', samplesOnTheFly
+        for sample_id in samplesOnTheFly:
+            id, old_label = sample_id
+            fresh_locs = [(schedule[i] == id) and (old_label[i] == 0) for i in range(self.classifier_num)]
+            fresh_labels = np.multiply(new_labels, fresh_locs)
+
+            #print 'id:',id, 'acquired_labels:', new_labels, 'fresh:', fresh_labels
             #-----display-------
             if self.disp <= 1:
-                 print('old label:', old_label, 'fresh_label:', fresh_labels)
+                 print('old label:', old_label, 'fresh_locs:', fresh_locs, 'fresh_label:', fresh_labels)
             #---------------------
             new_label = old_label + fresh_labels
             if np.linalg.norm(old_label) == 0:
-                new_labels_out += fresh_labels
+                new_labels_out = new_labels_out + fresh_labels
             # put the sample id with its label in the apt labelSubset queue
-            label_final, label_conf = self.__checkTerminationBayes(new_label)
+
+            if np.max(new_label) > self.num_classes:
+                print '!!!Error!!!'
+                print 'id:',id, 'old_label:',old_label
+                print 'fresh_labels:', fresh_labels, 'fresh_locs:', fresh_locs
+                print 'new_label:', new_label, 'max(new_label):', np.max(new_label)
+
+            label_final, label_conf = self.__checkTerminationBayes(new_label, id)
             if label_final is not None:
                 #-----display-------
-                if self.disp <= 10:
-                    print('new_label:', new_label, 'sample_id:%d'%sample_id,
+                if self.disp <= 1:
+                    print('new_label:', new_label, 'sample_id:%d'%id,
                     'label_final:%d'%label_final, 'label_conf:%.3f'%label_conf)
                 #---------------------
-                sample_out +=[(sample_id, label_final, new_label, label_conf)]
+                sample_out +=[(id, label_final, new_label, label_conf)]
             else:
-                self.labelSubsets[str(dest_lS)].queueEntry(new_label, sample_id)
+                dest_id = self.__listToStr(new_label)
+                if dest_id not in self.labelQueues:
+                    self.labelQueues[dest_id] = labelQueue(new_label)
+                self.labelQueues[dest_id].queueEntry(id)
         del samplesOnTheFly # nothing on the fly
-        return sample_out, schedule, new_labels
+        return sample_out, schedule, new_labels_out
 
 
     def newArrival(self, list_new_samples):
         # list_new_samples: list of new samples (id of each sample)
         label_0 = np.zeros(self.classifier_num).astype(int)
         # put the new arrivals in label_0 queue
+        # --if label_0 queue not present create it
+        id_0 = self.__listToStr(label_0)
+        if id_0 not in self.labelQueues:
+            self.labelQueues[id_0] = labelQueue(label_0)
         for entry in list_new_samples:
-            self.labelSubsets[str(label_0)].queueEntry(label_0, entry)
+            self.labelQueues[id_0].queueEntry(entry)

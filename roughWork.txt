@@ -1,0 +1,80 @@
+'''
+  def __compute_StaticSplit(self, arrival_rate):
+      # computes the staitc split policy (probability distributions)
+      # Generate all possible assignments:
+      # labels can be repeated in the assignement
+      # classifiers cannot be repeated: LC_j \cap LC_i = emptyset
+      # each assignment correspond to choosing
+      # 1) maximal independent set (MIS): maximalLS list
+      # 2) Assigning (label, SS) for SS in MIS (labels can be repeated)
+      #       assgn[MIS] dictionary, w/,
+      #       assgn[MIS] = list of [(label (l), list of classifiers (LC))]
+      # 3) flatten assgn[MIS] dictionary to obtain assgnList
+      # 4) For each (l, LC) we have:
+                  dest_lLC = list of destination labels
+                  prob_lLC = prob to each of the (label) d in dest_lLC [num_classes x num_classes]
+                      function of (confusion matrices of LC) and (prior given l)
+                  source_label = list of source for the queue label
+                  (source_allempty queue is arrival_rate (a vector of dim num_classes))
+      # 5) The LP formation
+      # i) Variables: p_assgn = prob of choosing assgn in assgnList
+      #               p_MIS = prob of choosing MIS
+      #               out_(label, assgn) = output flow for each label and assgn [num_classes x 1]
+      #               in_(label, assgn) = input flow for each label and assgn [num_classes x 1]
+      #               in_label = input flow for each label [num_classes x 1]
+      #               in_label = input flow for each label [num_classes x 1]
+      # ii) constraints: a) simplex constraints for p_assgn and p_MIS
+                         b) p_MIS = sum_{assgn s.t. assgn \in assgn[MIS]} p_assgn
+                         c) in_(label, assgn) =  sum_{l in source_label} sum_{(l,LC) in assgn} prob_lLC[label] out_(l, assgn)
+                         e) out_(label, assgn) =
+                         f) in_label = sum_assgn p_assgn*in_(label, assgn)
+                         g) out_label = sum_assgn p_assgn*out_(label, assgn)
+                         h) in_label <= out_label
+      #
+      maximalIS = []
+
+      labels = []
+
+
+      assgn = {}
+      for MIS in maximalIS:
+          assgn[MIS] = []
+          for SS in MIS:
+              for label in labels:
+                  if False#len(SS\supp(label)) > 0
+                      assgn[MIS].append((SS, label))
+
+
+      num_MIS = len(maximalIS)
+      # varaiables
+      p_MIS = cvx.Variable((num_MIS,1))
+      p_assgn = []
+      num_assgn = []
+      for MIS in maximalIS:
+          n = len(assgn[MIS])
+          p_assgn.append( cvx.Variable((n,1)) )
+          num_assgn.append(n)
+
+      in_flow = []
+      out_flow = []
+      for l in labels:
+          in_flow.append( cvx.Variable((self.num_classes,1)) )
+          out_flow.append( cvx.Variable((self.num_classes,1)) )
+      # constraints
+      # 1. the simplex constraints
+      a = np.ones((1, num_MIS))
+      constraints = [p_MIS <=1, 0<= p_MIS, a*p_MIS <= 1]
+      for i in range(num_MIS):
+          constraints += [p_assgn[i] <=1, 0<= p_assgn[i], a*p_assgn[i] <= 1]
+      # 2. the flow balance constraints
+      id_0 = labels.index(np.zeros((self.num_classes,1)))
+
+      for l in labels:
+          mixer()
+
+
+
+      return None
+
+  '''
+  #----------------------------------------------------------------------------
