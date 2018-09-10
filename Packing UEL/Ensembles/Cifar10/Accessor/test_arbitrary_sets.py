@@ -8,8 +8,8 @@ label_dict = cifar10_meta['label_names']
 
 # Select 3 classes from 2 data batches
 default_path = '/media/innovationcommons/DataStorage/Cifar-10/cifar-10-batches-py/'
-chosen_classes = [0, 4, 7]
-y = get_chosen_classes(chosen_classes, ['data_batch_1', 'data_batch_2'])
+chosen_classes = [3, 5, 7] # cat, dog, horse
+y = get_chosen_classes(chosen_classes, ['data_batch_1'])
 yy = combine_batches(y)
 
 # Verify that combined data batches are still labeled accurately
@@ -22,8 +22,8 @@ disp = Data_Display(data, labels, label_dict)
 disp.start_display()
 
 # Set an arbitrary class distribution
-perc_dict = {0: 0.25, 4: 0.50, 7: 0.25}
-yyy = set_class_distribution(yy, perc_dict, 'temp')
+perc_dict = {3: 0.25, 5: 0.50, 7: 0.25}
+yyy = set_class_distribution(yy, perc_dict, 'cat_dog_horse_50_25_25')
 
 # Test resulting data set still labeled accurately
 data1 = yyy['data']
