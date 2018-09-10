@@ -8,13 +8,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("cfg_file", type=str)
     parser.add_argument("train_file", type=str)
+    parser.add_argument("test_file", type=str)
     parser.parse_args()
     
     args = parser.parse_args()
 
     scnn = SimpleCNN_Classifier(args.cfg_file)
     scnn.get_train_data(args.train_file)
-    scnn.get_test_data('test_batch')
+    scnn.get_test_data(args.test_file)
     scnn.create()
     scnn.fit()
     scnn.get_metrics()
