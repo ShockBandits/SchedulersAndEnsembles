@@ -39,6 +39,7 @@ class DeepLearnerClassifier(object):
         self.train_data = None
         self.train_data_file = None
         self.train_labels = None
+        self.train_label_names = None
         self.has_train_data = False
         self.train_acc = None
         self.train_conf_matrix = None
@@ -46,6 +47,7 @@ class DeepLearnerClassifier(object):
         self.test_data = None
         self.test_data_file = None
         self.test_labels = None
+        self.test_label_names = None
         self.has_test_data = False
         self.test_acc = None
         self.test_conf_matrix = None
@@ -143,7 +145,6 @@ class DeepLearnerClassifier(object):
         labels = np.asarray(cifar_dict['labels'])
         self.train_labels = keras.utils.to_categorical(labels,
                                                        self.num_classes)
-
         self.has_train_data = True
         self.train_data_file = filename
 
@@ -257,13 +258,29 @@ class DeepLearnerClassifier(object):
         if trvate.lower() == "train":
             conf_matrix = self.train_conf_matrix
             out_str = "\nConfusion Matrix - Training Set"
+            if self.train_label_names is None:
+                label_usage = self.train_labels.sum(axis=0)
+                valid_labels = [x for ctr,x in enumerate(self.abbr_names)
+                                if label_usage[ctr] >0]
+                self.summary_dict['train_label_names'] = valid_labels
+            else:
+                valid_labels = self.train_label_names
         else:
             conf_matrix = self.test_conf_matrix
             out_str = "\nConfusion Matrix - Testing Set"
+            if self.test_label_names is None:
+                label_usage = self.test_labels.sum(axis=0)
+                valid_labels = [x for ctr,x in enumerate(self.abbr_names)
+                                if label_usage[ctr] >0]
+                self.summary_dict['test_label_names'] = valid_labels
+            else:
+                valid_labels = self.test_label_names
 
+    
+        
         if conf_matrix is not None:
-            df = pd.DataFrame(conf_matrix, index=self.abbr_names,
-                              columns=self.abbr_names)
+            df = pd.DataFrame(conf_matrix, index=valid_labels,
+                              columns=valid_labels)
             df = df.applymap("{0:.3f}".format)
             out_str += '\n' + df.to_string() + '\n'
         else:
