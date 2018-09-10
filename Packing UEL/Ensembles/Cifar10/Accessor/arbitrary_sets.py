@@ -1,6 +1,7 @@
 from collections import defaultdict
 import cPickle
 import numpy as np
+import operator
 import os
 from random import shuffle
 import sys
@@ -107,6 +108,10 @@ def set_class_distribution(ub_dict, percentage_dict, name):
     batch_size = int(min([label_ctr_dict[x]/percentage_dict[x] for x in percentage_dict]))
     class_trgt_distrib = {x: int(batch_size*percentage_dict[x]) for x in percentage_dict}
     class_actual_distrib = {x: 0 for x in percentage_dict}
+    tot_trgts = sum([class_trgt_distrib[x] for x in class_trgt_distrib])
+    if  tot_trgts < batch_size:
+        key, val = min(class_trgt_distrib.iteritems(), key=operator.itemgetter(1))
+        class_trgt_distrib[key] += (batch_size - tot_trgts)
 
     tot_rows = batch_size
 
