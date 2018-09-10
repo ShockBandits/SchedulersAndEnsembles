@@ -1,7 +1,8 @@
 #!/bin/bash
 
-python make_simple_cnn.py SCNN_4.cfg data_batch_1
-python make_simple_cnn.py SCNN_4.cfg data_batch_2
-python make_simple_cnn.py SCNN_4.cfg data_batch_3
-python make_simple_cnn.py SCNN_4.cfg data_batch_4
-python make_simple_cnn.py SCNN_4.cfg data_batch_5
+python make_simple_cnn.py SCNN_5.cfg cat_dog_horse_25_50_25_db12 cat_dog_horse_test
+python make_simple_cnn.py SCNN_5.cfg cat_dog_horse_50_25_25_db23 cat_dog_horse_test
+python make_simple_cnn.py SCNN_5.cfg cat_dog_horse_25_25_50_db34 cat_dog_horse_test
+python make_simple_cnn.py SCNN_5.cfg cat_dog_horse_333_334_333_db45 cat_dog_horse_test
+python make_simple_cnn.py SCNN_5.cfg cat_dog_horse_40_40_20_db51 cat_dog_horse_test
+
