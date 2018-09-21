@@ -33,17 +33,20 @@ def test_it(max_new_arrivals):
             curr_samps = sample_list[:num_new_arrivals]
             sample_list = sample_list[num_new_arrivals:]
             strawman.newArrival(curr_samps)
+            print '\nAdded to Queue', curr_samps
+
         else:
             num_new_arrivals = 0
 
         # Let strawman do single time step of processing
         results = strawman.schedule()
 
-        print '\nAdded to Queue', num_new_arrivals
         print 'Processed', len(results)
         print 'Remaining Out of Queue', len(sample_list)
         print 'Remaining In Queue', len(strawman.queue)
+        print 'Queue:', strawman.queue
         print results
+        print "\n==================================================================\n\n"
         if len(sample_list) == 0 and len(strawman.queue) == 0:
             done = True
 
