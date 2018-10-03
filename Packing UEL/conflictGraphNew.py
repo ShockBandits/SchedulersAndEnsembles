@@ -13,6 +13,7 @@ from matplotlib import pyplot as plt
 from joblib import Parallel, delayed
 import multiprocessing
 from collections import deque
+import time
 
 
 # In[2]:
@@ -103,6 +104,7 @@ class conflictGraph:
         #  i\p. schedule is a list of sample id
         #  o\p. list of labels from the classifiers for the respective sample ids
         self.__createconflictGraph()
+        self.__create_bayesianDict()
         self.labelQueues = {}
         #-----display-----
         if self.disp <= 1:
@@ -163,6 +165,37 @@ class conflictGraph:
             if edge[1] in allowedSS:
                 j2 = allowedSS.index(edge[1]); A[i,j2] = 1;
         self.A = A
+
+    def __create_bayesianDict(self):
+        '''
+        self.destDict = key: label, value: list of destination labels
+        self.bayesianDict
+
+        '''
+        print 'In create Dest Labels'
+        start_time = time.time()
+
+        self.destDict = {}
+        #generate all possible labels
+        list_labels = [range(self.num_classes+1)]*self.classifier_num
+        # all possible labels when k is alloted to sample from label_src
+        all_labels =  [list(e) for e in product(*list_labels)]
+        print 'Number of labels:%d'%len(all_labels)
+        for k in self.allowed_subset: # O(|S|)
+            start_probe = time.time()
+            for l in all_labels:
+                list_labels = [[]]*self.classifier_num
+                for lli in range(self.classifier_num):
+                    if l[lli]:
+                        list_labels[lli] = [l[lli]]
+                    elif k[lli]:
+                        list_labels[lli] = range(1, self.num_classes+1)
+                    else:
+                        list_labels[lli] = [0]
+                self.destDict[str((k,l))] =  [list(e) for e in product(*list_labels)]
+            print 'time for set %s:%f'%(str(k), np.round(time.time() - start_probe,3))
+        print 'Out of create Dest Labels in time:',np.round(time.time() - start_time, 3)
+        return
     #-------------------------------------------------------------
     ## The following are the inputs from the UEL module
     ## And some meaning less estimator
@@ -264,12 +297,7 @@ class conflictGraph:
             return (value_curr, incntv, label_in, l)
         else:
             return (-1000, None, None, None)
-    #----------------------------------------------------------------------------
-
-
-
-
-
+    #---------------------------------------------------------------------------
     def __compute_weights(self):
         # computes weights for each node in the conflict graph
         # each node has a list of (source, dest) pairs of labelSubsets
@@ -279,38 +307,31 @@ class conflictGraph:
         # Subset k is one among the allowed subsets
             for l in self.labelQueues.keys(): #O(|lQs|)
             # l is one label queue
+                # classifiers in source subset
                 label_src = [int(i) for i in l]
                 subset_src = self.__getlabelSubset(label_src)
+                # the new subset with the calssifiers in k added to subset_src
                 subset_new = np.array(np.minimum(1, subset_src+k))
-                subset_diff = [j for j in range(self.classifier_num) if (subset_new[j]>subset_src[j])]
-                #-------------
-                # create all the possible labels under the new subset
+                # New classifiers not present in subset_src (overlap is possible)
+                subset_diff = [j for j in range(self.classifier_num)
+                                            if (subset_new[j]>subset_src[j])]
+                # #-------------
+                # # create all the possible labels under the new subset
                 if len(subset_diff) > 0:
-                    list_labels = [[]]*self.classifier_num
-                    for lli in range(self.classifier_num):
-                        if lli in subset_src:
-                            list_labels[lli].append(label_src[lli])
-                        elif lli in subset_diff:
-                            list_labels[lli].extend(range(1, self.num_classes+1))
-                        else:
-                            list_labels[lli].append(0)
-
-                    dest_list =  [list(e) for e in product(*list_labels)]
-
-
-
+                    dest_list = self.destDict[str((k,label_src))]
+                    # creating the Q(l), p(l,l'), acc(l') lists
                     Q_l = self.labelQueues[l].totalCount()
 
                     Q_d_list = []; p_d_list = []; acc_d_list = []
                     for d in dest_list:
                         if str(d) in self.labelQueues:
                             Q_d_list.append(self.labelQueues[str(d)].totalCount())
-                            p_d_list.append(self.__estimator(label_src, label_dest))
-                            acc_d_list.append(self.__checkTerminationBayes(label_dest)[1])
+                            p_d_list.append(self.__estimator(label_src, d))
+                            acc_d_list.append(self.__checkTerminationBayes(d)[1])
 
                     wght_l = Q_l - np.sum(q*p for q,p in zip(Q_d_list, p_d_list))
                     # max new labels
-                    #inctv_l = (Q_l>0)*np.sum(k)/float(self.classifier_num)
+                    # inctv_l = (Q_l>0)*np.sum(k)/float(self.classifier_num)
                     # max Accuracy
                     inctv_l = (Q_l>0)*np.sum(acc*p for acc,p in zip(acc_d_list, p_d_list))
 

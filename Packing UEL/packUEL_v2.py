@@ -82,7 +82,8 @@ def computeError(output_stream, true_label_stream):
 # In[8]:
 
 
-def ConfError(C_real, num_data, p_true, num_classifier, C_est, ph_est_avg):
+def ConfError(C_real, num_data, p_true, num_classifier,
+                        C_est, ph_est_avg, specFlag):
     # C_real = Array of real confusion matrices
     # num_data = number of data points in simulation
     # p_true = gnd truth class frequency
@@ -95,6 +96,7 @@ def ConfError(C_real, num_data, p_true, num_classifier, C_est, ph_est_avg):
     print '---------------------------'
     print '*****Param Update*****'
     print '---------------------------'
+    print 'Spectral Estimation?%r'%specFlag
     print 'Num samples:%d'%num_data
     print 'True ph:%s'%str_arr(p_true)
     print 'Est ph:%s'%str_arr(ph_est_avg)
@@ -119,9 +121,11 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
               load_ENS = False, fit_ENS = False,
               load_params = True, save_params = False,# Ensemble
               Maxiter= 25, num_init = 10,
-              k_max_size = 3, # allowed subset
+              k_max = 3, # allowed subset
               arr_rate = 0.8, thres = 0.75, V = 1, # arrival and departure thres
               updateON = True, truePrior = False, # priors
+              expert_frac = 0.1, # false prior: diag = expert_frac+(1-expertfrac)/num_class;
+                                 #              non-diag = (1-expertfrac)/num_class
               time_slots = 1000 # simulation length
              ):
     '''
@@ -202,7 +206,7 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
         #-----------------------------------
         # synthetic dataset
         name_classifier = ['syn-'+str(i) for i in range(num_classifier)]
-        ENS = fakeENS(num_classifier, num_class, confMat = conf_mat)
+        ENS = fakeENS(num_classifier, num_class, confMat = conf_mat, excess_acc = [0.85, 0.85, 0.85])
         trueConfMat = ENS.getConfMat()
         #------------------------------------
         # beginning of the simulation
@@ -254,7 +258,7 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
     else:
         # expert prior with uniform label porbabilities
         # the prior of conf matrices - larger expert_frac => larger diagonal
-        expert_frac = 0.01
+        expert_frac = 0.1
         expertConfMat = {j: (expert_frac)*np.eye(num_class)+
                          (1-expert_frac)*np.tile(unip, [num_class, 1])
                           for j in range(num_classifier)}
@@ -262,45 +266,38 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
         params['p_true'] = unip
     #---------display: current parameter error--------------
     est_err = ConfError(trueConfMat, 0, p_true, num_classifier,
-                         params['Confmat'], params['p_true'])
+                         params['Confmat'], params['p_true'], False)
+
 
     true_avg_acc = [averageAcc(p_true, trueConfMat[i]) for i in range(num_classifier)]
     init_avg_acc = [averageAcc(p_true, params['Confmat'][i]) for i in range(num_classifier)]
     print 'True Avg accuracy: %s'%str_arr(true_avg_acc)
     print 'Initial Avg accuracy: %s'%str_arr([averageAcc(p_true, params['Confmat'][i])
                                               for i in range(num_classifier)])
-
-
+    #----------------------------------------------------------
     #                Allowed subsets
+    #----------------------------------------------------------
     allowed_subset = []
-    #                Generalized assignment problem
-
-    # k_max_size = min(num_classifier-1, k_max_size)
-    # k_max = [num_classifier]
-    # for kms in range(k_max_size):
-    #     k_max.append(int(kms+1))
-    #     k_max.append(num_classifier - int(kms+1))
-    # k_max = list(set(k_max))
-
-    # for k in k_max:
-    #     allowed_subset += kbits(int(num_classifier), int(k))
-
-    #               Matching problem
-    k_max = 1
-    allowed_subset += kbits(int(num_classifier), 1)
+    #               Matching problem/ Generalized assignment problem
+    allowed_subset += kbits(int(num_classifier), int(k_max))
     #           Create the conflict graph
 
     disp = 100    # disp parameter for conflict Graph
+    #display: allowed subsets
+    print 'Allowed all subsets of size:',k_max
+    #----------------------------------------------------------
+    #                Conflict Graph
+    #----------------------------------------------------------
     G = conflictGraph(allowed_subset = allowed_subset, M = num_classifier,
                       C = num_class, Ens= ENS, params = params,
                       V = V, thres = thres, disp = disp)
-
-    #          Create the spectral estimator
-
+    #----------------------------------------------------------
+    #         Spectral Estimator
+    #----------------------------------------------------------
     S = spectralEM(num_classifier, num_class, maxiter = Maxiter, num_init = num_init, disp =False)
-
-    #          Compute metrics for Spectral estimation
-
+    #----------------------------------------------------------
+    #          Metrics for Spectral Estimation
+    #----------------------------------------------------------
     group = S.group
     groupConfMat = {i: np.mean([trueConfMat[j]
                                 for j in range(num_classifier) if group[i][j]], axis = 0)
@@ -319,35 +316,32 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
     #Display: metrics for spectral estimation
     print 'Metrics in Spectral Learning| kappa:%.3f, barD:%.3f'%(kappa, barD)
     print
-
-    #display: allowed subsets
-    print 'Allowed all subsets of size:',k_max
-
+    #---------------------------------------------------
     #              Reset Internal States
-
+    #---------------------------------------------------
     G.reset() # resets the internal queues
     S.reset() # resets the internal parameters
-
     #       Exploration and estimation parameters
-
-    update_num = 25 # lenght of explore_data when S is updated
-    updateSpectral = True # no spectral updates (only EM)
+    update_num = 5  # lenght of explore_data when S is updated
+    updateSpectral = True # no spectral updates if False (only EM)
+    updateEM = True # no EM updates  if False (only Spectral)
+    Spec2EM = 10
     # make the following two 0 to stop exploration
     explore_prob_const = 0.1 # probability with which exploration happens
-    init_explore = 25 # Number of initial time slots when explore happens
+    init_explore = 750 # Number of initial time slots when explore happens
     #---------------------------------------------------
-
     # Initialization
     output_stream= []
     true_label_stream = []
     queue_evol = []
     error_evol = []
     est_evol = []
+    spec_evol = []
 
     samp_count = 0
     tau = 0
     explore_data = []
-    count_update = 0
+    count_EM_update = 0
 
     # display period
     disp_period = 25
@@ -357,10 +351,32 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
     print 'Total samples:', num_tot_samp, 'Total time slots:', time_slots
     print 'Update the parameters:', updateON
     print 'Update using spectral method:', (updateON and updateSpectral)
+    #--------------------------------------------------------
+    #    Update the Spectral Estimator with Intial Data
+    #--------------------------------------------------------
+    # Select Init_explore Number of samples from the stream_sample
+    if updateON:
+        init_explore = min(num_tot_samp, 500)
+        print '---------------------'
+        print ' Initial Exploration '
+        print '---------------------'
+        explore_ids = np.random.choice(range(num_tot_samp), size = init_explore)
+        G.newArrival(stream_sample[explore_ids]+1)
+        count_init_explore = 0
+        init_explore_data = []
+        while (count_init_explore < (init_explore-1)):
+            _, _, new_labels_out = G.schedule(explore = True)
+            init_explore_data += [new_labels_out-1]
+            count_init_explore +=len(init_explore_data)
+            S.update(init_explore_data)
+            print 'Number of exploration samples Added:%d'%count_init_explore
+        G.reset() # Reset G
     #--------------------------------------
     #            Iterations
     #--------------------------------------
-    print '----------\nIterations Begin\n-----------'
+    print '--------------------'
+    print '  Iterations Begin  '
+    print '--------------------'
     while len(output_stream)< num_tot_samp:
         #----arrival-----
         if tau < time_slots:
@@ -375,14 +391,14 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
         #                set explore probability
 
         # default
-        explore_prob = explore_prob_const # explore_prob_const*np.log(i)/i
-        # explore for the first 100 rounds
-        explore_prob = 1.0 if tau < init_explore else explore_prob
-        # explore only if updateON
-        explore_flag = (np.random.rand() < explore_prob) and updateON
-
-        #                 schedule
-
+        explore_prob = explore_prob_const
+        #explore_prob = explore_prob_const*np.log(i)/i # epsilon_t Bandit
+        explore_flag = (np.random.rand() < explore_prob) and updateON # explore only if updateON
+        specFlag = False
+        EMFlag = False
+        #----------------------------------------------------------
+        #                         Schedule
+        #----------------------------------------------------------
         try:
             sample_out, schedule, new_labels_out = G.schedule(explore = explore_flag)
             # sample_out: (id, label_final, new_label, label_conf)
@@ -394,9 +410,8 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
         #                  Update Parameters
         #----------------------------------------------------------
         if updateON: # update on each output
-        #if explore_flag: # update on exploration instances
-            # Keep the only samples that are freshly marked
-            explore_data += [new_labels_out-1]
+            if explore_flag: # update only on exploration instances
+                explore_data += [new_labels_out-1]
             #print 'explore_data:', explore_data
 
         if (len(explore_data) >= update_num) and updateON:
@@ -407,23 +422,25 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
 
             #          recallibrate params using Spectral
 
-            if (tau > init_explore) and updateSpectral:
+            if updateSpectral and (count_EM_update >= Spec2EM):
                 S.updateParamsSpectral()
-                count_update +=1
+                count_EM_update = 0
+                specFlag = True
 
                 #   update params using EM
-
-                S.updateParamsEM(explore_data);
+            if updateEM:
+                S.updateParamsEM();
+                count_EM_update +=1
+                EMFlag = True
 
             #           update G params
 
             new_params = {'Confmat': S.conf_mat, 'p_true': S.ph_est_avg}
             G.updateParams(new_params)
 
-            #            compute error
 
             est_err = ConfError(trueConfMat, S.num_data, p_true,
-                           num_classifier, S.conf_mat, S.ph_est_avg)
+                           num_classifier, S.conf_mat, S.ph_est_avg, specFlag)
 
             #           empty explore_data
 
@@ -444,9 +461,11 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
         true_label_stream += true_label_out
         classification_error = computeError(output_stream, true_label_stream)
 
+
         queue_evol.append(tot_queue)
         error_evol.append(classification_error)
         est_evol.append(est_err)
+        spec_evol.append(specFlag)
         #----------------------------------------------------------
         #                   Display
         #----------------------------------------------------------
@@ -491,6 +510,7 @@ def simulator(data_set = 'Cifar10', ens_num = 0,
     output_dict['queue_evol'] = queue_evol
     output_dict['error_evol'] = error_evol
     output_dict['est_evol'] = est_evol
+    output_dict['spec_evol'] = spec_evol
     output_dict['rem_samples'] = rem_samples
     output_dict['trajectories'] = G.trajectories
     output_dict['classifierHist'] = G.classifierHist
@@ -510,6 +530,7 @@ def displayResults(output_dict):
     queue_evol = output_dict['queue_evol']
     error_evol = output_dict['error_evol']
     est_evol = output_dict['est_evol']
+    spec_evol = output_dict['spec_evol']
     rem_samples = output_dict['rem_samples']
     #-------------------------------------------------------
     print 'Remaining Samples:', rem_samples
@@ -521,45 +542,55 @@ def displayResults(output_dict):
     print 'Time average of total Queue Length:%.2f'%np.mean(queue_evol)
 
     print '---------\n Sample Trajectories\n--------'
-    trajs = random.sample(output_dict['trajectories'].items(), 10)
+    trajs = random.sample(output_dict['trajectories'].items(), 10) # trajectories
+    num_used_classifier = []
     for k,v in trajs:
         print 'id:%d'%k
         for i,n in enumerate(v):
             print 'Step:%d Labels:%s  Posterior:%s '%(i, str_arr(n[0], 'int'), str_arr(n[1]))
             if len(n) == 3:
                 print 'Final Label:%d'%n[2]
+                num_used_classifier += [np.sum(n[0]>0)]
         print
+
+    print 'Average number of classifiers used per sample:',np.mean(num_used_classifier)
 
     print '---------\n Classifier Histogram\n---------'
     for k,hist in output_dict['classifierHist'].items():
         print 'Classifier:%d'%k
         print 'Histogram'
         for l, L in sorted(hist.items()):
-            print 'label:%s, #samples:%d'%(l,len(L)),'|'
+            if len(L) > 10:
+                print 'label:%s, #samples:%d'%(l,len(L)),'|'
         print
 
     if tau <= (time_slots):
         arrival_arr_pad = arrival_arr[:tau]
     else:
         arrival_arr_pad = np.array(list(arrival_arr) + list(np.zeros(tau - time_slots)))
-
+    # Plot Queue Lengths
     plt.plot(range(tau), arrival_arr_pad, 'b-', range(tau), queue_evol, 'r--')
     plt.legend(['Arrival', 'Total Queue Length'])
     plt.title('Arrival and Evolution of Queues')
     plt.xlabel('timeslot')
     plt.show()
 
-
-
+    # Plot Accuracy
     plt.plot(range(tau), [1-e for e in error_evol], 'b-')
     plt.title('Evolution of Classification Accuracy')
     plt.xlabel('timeslot')
     plt.ylabel('Accuracy')
     plt.show()
 
+    # Plot Estimation Error
     plt.plot(range(tau), [e[0] for e in est_evol],
              'b-', range(tau),[np.mean(e[1]) for e in est_evol] , 'r--')
     plt.legend(['p_true', 'conf mat'])
+    # instances of spectral Estimation
+    for i in range(tau):
+        if spec_evol[i]:
+            plt.axvline(x=i)
+
     plt.title('Evolution of Estimation Error')
     plt.xlabel('timeslot')
     plt.show()
@@ -574,7 +605,7 @@ if __name__ =='__main__':
     # arg4 = num_classifier, arg5 = threshold
     #--------------------------------
     print sys.argv
-    arg = [0.9, 200, 3, 5, 0.75]
+    arg = [0.9, 200, 2, 5, 0.75, False]
     floats = [1,5]
     for i in range(1, len(sys.argv)):
         if i in floats:
@@ -582,13 +613,26 @@ if __name__ =='__main__':
         else:
             arg[i-1] = int(sys.argv[i])
     #--------------------------------
-    output_dict = simulator(ens_num=0, num_class = arg[2], num_classifier = arg[3],  # Ensemble and Data
-                  load_ENS = True, fit_ENS = False,
-                  load_params = False, save_params = False, # Ensemble
-                  k_max_size = 3, # allowed subset
-                  arr_rate = arg[0], thres = arg[4],# arrival and departure thres
-                  updateON = False, truePrior = True, # priors
-                  Maxiter= 30, num_init=100,
-                  time_slots = arg[1])# simulation length
+    output_dict = simulator(
+                      arr_rate = arg[0], # arrival
+                      time_slots = arg[1],# simulation length
+                      num_class = arg[2], # Number of classes
+                      num_classifier = arg[3],  # NUmber of Classfiers
+                      thres = arg[4],# departure accuracy thres
+                      updateON = arg[5], # updates the parameters iff True
+                      #---------------Prior on params---------------
+                      truePrior = False, # uses True prior iff True
+                      expert_frac = 0.1, # if false prior: diag = expert_frac+(1-expertfrac)/num_class;
+                                         #              non-diag = (1-expertfrac)/num_class
+                      Maxiter = 75, num_init = 100, #Tensor decomposition parameters
+                      k_max = 1, # maximum size of the allowed subsets
+                      #--------------The Ensemble Type--------------------
+                      load_ENS = False, # NN clasifiers used iff load_ENS = True, else fake_ENS is used
+                      fit_ENS = False, # NN training is done for NN classifiers iff fit_ENS = True,
+                      ens_num=0, # NN Ensemble Number
+                      load_params = False, # params are loaded from a file if load_params = True
+                      save_params = False, # params are saved in a file if save_params = True
+                      #----------------------------------------------
+                  )
     # Display the results
     displayResults(output_dict)
