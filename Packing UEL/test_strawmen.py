@@ -6,7 +6,7 @@ from Ensembles.Ensemble import Ensemble
 from strawmen import StrawMan1
 
 # Create Ensemble
-x = Ensemble('./Cifar10/',  3)
+x = Ensemble('./Cifar10/', 5)
 x.load_classifiers()
 x.get_train_data()
 x.get_test_data()
@@ -14,45 +14,58 @@ x.get_test_data()
 x.assign_members_train_data()
 x.assign_members_test_data()
 
-# Create strawman
-strawman = StrawMan1(x, 3)
 
 
-def test_it(max_new_arrivals):
+def test_it(subset_size, max_new_arrivals):
     """ Tests strawman scheduler"""
-    sample_list = range(100)  # Limiting test to first 100 images
+
+    # Create strawman
+    strawman = StrawMan1(x, subset_size)
+
+    sample_list = range(strawman.ensemble.test_data.shape[0])  # Limiting test to first 100 images
     random.shuffle(sample_list)
     done = False
 
     while not done:
         # Calculate new arrivals to queue
         if len(sample_list) != 0:
-            num_new_arrivals = random.randint(0, max_new_arrivals)
+            num_new_arrivals = 5#random.randint(0, max_new_arrivals)
             num_new_arrivals = min(len(sample_list),
                                    num_new_arrivals)
             curr_samps = sample_list[:num_new_arrivals]
             sample_list = sample_list[num_new_arrivals:]
             strawman.newArrival(curr_samps)
-            print '\nAdded to Queue', curr_samps
+            #print '\nAdded to Queue', curr_samps
 
         else:
             num_new_arrivals = 0
 
         # Let strawman do single time step of processing
         results = strawman.schedule()
-
+        '''
         print 'Processed', len(results)
         print 'Remaining Out of Queue', len(sample_list)
         print 'Remaining In Queue', len(strawman.queue)
         print 'Queue:', strawman.queue
         print results
         print "\n==================================================================\n\n"
+        '''
         if len(sample_list) == 0 and len(strawman.queue) == 0:
             done = True
+    final_results = strawman.accuracy_tally[-1]
+    tot = final_results[1] + final_results[2]
+    acc = float(final_results[1])/float(tot)
+    return (final_results[0], tot, acc)
 
 # Test it
-test_it(5)
+max_arrivals = 10
 
+for ctr in range(1,6):
+    answers = test_it(ctr, max_arrivals)
+    print "-------------------------------------------------------------------"
+    print "Subset Size: %d  Time Slots: %d  Accuracy: %6.4f  Tot Images: %d"%(ctr, answers[0],
+                                                                              answers[-1], answers[1])
+print "-------------------------------------------------------------------"
 '''
 Sample Result:
 

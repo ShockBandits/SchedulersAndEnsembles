@@ -4,7 +4,7 @@ import numpy as np
 import os
 from random import random, shuffle
 
-default_path = '/media/smgutstein/current_data/cifar-10-batches-py/'
+default_path = '/media/innovationcommons/DataStorage/Cifar-10/cifar-10-batches-py/'
 
 
 def get_overbalanced_classes(over_list, source_batches):
@@ -97,11 +97,11 @@ def filter_classes(in_dict, safe_classes, filter_prob):
     return filtered_dict
 
 
-overbal_classes = [2,3,4,5,7]
+overbal_classes = [2,3,4,5]
 prob_of_elim_non_over = 0.33
-output_file = 'bcddh_1'
+output_file = 'bcdd_1_23'
 main_data = 'data_batch_1'
-extra_data = ['data_batch_2', 'data_batch_3', 'data_batch_4', 'data_batch_5']
+extra_data = ['data_batch_2', 'data_batch_3']#, 'data_batch_4', 'data_batch_5']
 
 
 od = get_overbalanced_classes(overbal_classes, extra_data)

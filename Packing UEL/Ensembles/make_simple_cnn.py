@@ -26,10 +26,10 @@ if __name__ == '__main__':
     results_suffix = '_'.join([args.train_file,
                                str(scnn.epochs)])
 
-    scnn.save(results_suffix)
+    scnn.save()#results_suffix)
 
     scnn1 = SimpleCNN_Classifier(args.cfg_file)
-    scnn1.read(results_suffix)
+    scnn1.read()#results_suffix)
     scnn1.print_acc()
     scnn1.print_conf_matrix('train')
     scnn1.print_conf_matrix('test')

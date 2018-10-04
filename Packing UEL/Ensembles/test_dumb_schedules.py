@@ -15,7 +15,7 @@ for subset_size in range(1,6):
     results.append(x.rnd_subsets_test(range(len(x.test_labels)),
                    subset_size))
 
-for subset_size in range(1,6):
+for subset_size in range(1,6): '/home/innovationcommons/InnovCommon_Projects/Shakkotai/SchedulersAndEnsembles/Packing UEL/Ensembles/Cifar10/Classifiers/results_dir/Ensemble_results'
     print subset_size,results[subset_size-1]
 
 '''

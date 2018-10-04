@@ -98,7 +98,7 @@ def set_class_distribution(ub_dict, percentage_dict, name):
     for x in ub_dict['labels']:
         label_ctr_dict[x] += 1
         
-    if tot_percent != 1:
+    if abs(tot_percent - 1) > 1e-15:
         sys.exit("Total percentages != 1")
     if len(ub_dict['meta_data'][0]) != len(percentage_dict):
         sys.exit("Mismatch between expected and given number of classes")
