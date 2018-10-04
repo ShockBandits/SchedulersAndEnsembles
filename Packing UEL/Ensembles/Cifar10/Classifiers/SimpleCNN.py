@@ -45,6 +45,23 @@ class SimpleCNN_Classifier(DeepLearnerClassifier):
         # initiate RMSprop optimizer
         opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
 
+        model_input_shape = model.iput_shape[1:]
+        data_shape = self.train_data.shape[1:]
+        if mopdel_input_shape != data_shape:
+            #Assume number of channels is min element of shape tuple
+            if min(data_shape) == data_shape[-1]:
+                #Convert data from channels last to channels first
+                self.train_data = self.train_data.transpose(0, 3, 1, 2)
+                self.test_data = self.test_data.transpose(0, 3, 1, 2)
+            elif min(data_shape) == data_shape[0]:
+                #Convert data from channels first to channels last
+                self.train_data = self.train_data.transpose(0, 2, 3, 1)
+                self.test_data = self.test_data.transpose(0, 2, 3, 1)
+            else:
+                print("Data Input Shape: " + str(self.train_data.shape[1:]))
+                print("Model Input Shape: " + str(model_input_shape))
+                sys.exit()
+
         # Let's train the model using RMSprop
         model.compile(loss='categorical_crossentropy',
                       optimizer=opt,

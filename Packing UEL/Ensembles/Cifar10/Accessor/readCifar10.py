@@ -11,8 +11,8 @@ def getCifar10(file, reshape_data = False, path = default_path):
         cifar_dict = cPickle.load(f)
         if reshape_data:
             num_images = cifar_dict['data'].shape[0]
-            temp = cifar_dict['data'].reshape(num_images,3,32,32)
-            cifar_dict['data'] = temp.transpose([0,2,3,1])
+            cifar_dict['data'] = cifar_dict['data'].reshape(num_images,3,32,32)
+            #cifar_dict['data'] = cifar_dict['data'].transpose([0,2,3,1])
     return cifar_dict
 
 def getMetaDict(path = default_path):

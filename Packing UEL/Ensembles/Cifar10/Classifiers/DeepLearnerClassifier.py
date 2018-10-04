@@ -107,7 +107,9 @@ class DeepLearnerClassifier(object):
 
     def save(self, suffix=''):
 
-        filename = self.name + '_' + suffix
+        filename = self.name
+        if len(suffix) > 0:
+            filename += '_' + suffix
 
         # serialize classifier to JSON
         classifier_json = self.classifier.to_json()
@@ -134,11 +136,35 @@ class DeepLearnerClassifier(object):
 
         print "Saved to ", outfile
 
+    def check_channel_order(self, check_data):
+        if self.classifier and self.classifier.input_shape:
+
+            input_shape = self.classifier.input_shape[1:]
+            data_shape = check_data.shape[1:]
+
+            if input_shape != data_shape:
+                # Assume number of channels is min element of shape tuple
+                if min(data_shape) == data_shape[-1]:
+                    # Convert data from channels last to channels first
+                    check_data = check_data.transpose(0, 3, 1, 2)
+                elif min(data_shape) == data_shape[0]:
+                    # Convert data from channels first to channels last
+                    check_data = check_data.transpose(0, 2, 3, 1)
+                else:
+                    print("Data Input Shape: " + str(check_data[1:]))
+                    print("Model Input Shape: " + str(input_shape))
+                    sys.exit()
+
+        return check_data
+
+
+
     def get_train_data(self, filename):
         cifar_dict = getCifar10(filename, reshape_data=True)
         self.train_data = cifar_dict['data']
-        if K.image_data_format() == 'channels_first':
-            self.train_data = self.train_data.transpose(0, 3, 1, 2)
+        #if K.image_data_format() == 'channels_first':
+        #    self.train_data = self.train_data.transpose(0, 3, 1, 2)
+        self.train_data = self.check_channel_order(self.train_data)
 
         self.train_data = self.train_data.astype('float32')
         self.train_data /= 255
@@ -151,8 +177,9 @@ class DeepLearnerClassifier(object):
     def get_test_data(self, filename):
         cifar_dict = getCifar10(filename, reshape_data=True)
         self.test_data = cifar_dict['data']
-        if K.image_data_format() == 'channels_first':
-            self.test_data = self.test_data.transpose(0, 3, 1, 2)
+        #if K.image_data_format() == 'channels_first':
+        #    self.test_data = self.test_data.transpose(0, 3, 1, 2)
+        self.test_data = self.check_channel_order(self.test_data)
 
         self.test_data = self.test_data.astype('float32')
         self.test_data /= 255
@@ -234,6 +261,10 @@ class DeepLearnerClassifier(object):
         temp = dataset[samp_num, :, :, :]
         return temp[np.newaxis, :]
 
+    def get_sample_label(self, dataset, samp_num):
+        temp = dataset[samp_num]
+        return np.argmax(temp)
+
     def classify(self, sample):
         return self.classifier.predict_proba(sample)[0]
 
@@ -308,3 +339,4 @@ class DeepLearnerClassifier(object):
     def print_acc(self):
         print_str = self.get_acc_str()
         print print_str
+
