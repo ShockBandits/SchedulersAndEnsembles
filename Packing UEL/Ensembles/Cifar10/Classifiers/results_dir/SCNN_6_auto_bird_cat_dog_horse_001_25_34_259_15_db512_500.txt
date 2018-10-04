@@ -1,0 +1,17 @@
+Training Acc: 0.8314985396540103
+Testing Acc: 0.7674
+Confusion Matrix - Training Set
+       autom   bird    cat    dog  horse
+autom  1.000  0.000  0.000  0.000  0.000
+bird   0.019  0.809  0.099  0.008  0.064
+cat    0.008  0.009  0.933  0.013  0.038
+dog    0.005  0.012  0.253  0.636  0.094
+horse  0.007  0.003  0.033  0.001  0.955
+
+Confusion Matrix - Testing Set
+       autom   bird    cat    dog  horse
+autom  0.806  0.031  0.109  0.006  0.048
+bird   0.025  0.692  0.176  0.027  0.080
+cat    0.012  0.033  0.860  0.031  0.064
+dog    0.010  0.028  0.284  0.573  0.105
+horse  0.013  0.011  0.064  0.006  0.906
