@@ -1,13 +1,13 @@
-Training Acc: 0.9704383282486452
-Testing Acc: 0.8136666666666666
+Training Acc: 0.9628950051089917
+Testing Acc: 0.8170000001589457
 Confusion Matrix - Training Set
          cat    dog  horse
-cat    0.981  0.015  0.004
-dog    0.040  0.955  0.005
-horse  0.016  0.004  0.980
+cat    0.982  0.015  0.003
+dog    0.055  0.937  0.008
+horse  0.016  0.007  0.977
 
 Confusion Matrix - Testing Set
          cat    dog  horse
-cat    0.806  0.168  0.026
-dog    0.153  0.815  0.032
-horse  0.095  0.085  0.820
+cat    0.826  0.138  0.036
+dog    0.178  0.785  0.037
+horse  0.089  0.071  0.840
